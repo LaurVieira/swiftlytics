@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SWIFTLYTICS — The Science Behind Music</title>
-<meta name="description" content="Can audio predict how a song feels? A scrollytelling data science study of Taylor Swift's studio albums: valence from audio features, and whether lyrics add anything.">
+<meta name="description" content="Can audio predict how a song feels? A scrollytelling data science study of Taylor Swift's studio albums, with valence predicted from audio features and a check on whether lyrics add anything.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SWIFTLYTICS — The Science Behind Music">
 <meta property="og:description" content="Can we predict how a song feels? Audio features, lyrics and a whole-album test.">
@@ -44,7 +44,6 @@ a{color:var(--lilac)}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;color:var(--lilac)}
 button{font-family:inherit}
 
-/* HUD */
 .hud{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;pointer-events:none}
 .hud button,.hud a{pointer-events:auto}
 .hud-bar{height:2px;background:var(--faint)}
@@ -62,7 +61,6 @@ button{font-family:inherit}
 .hud button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
 @media (max-width:640px){.hud-mid{display:none}.hud-row{justify-content:space-between}}
 
-/* tracklist overlay */
 .tracklist{position:fixed;inset:0;z-index:70;background:rgba(var(--bg-rgb),.97);display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 70px) clamp(24px,8vw,120px) 40px;overflow:auto}
 .tracklist[hidden]{display:none}
 .tracklist .tl-h{font:500 .68rem var(--text);letter-spacing:.3em;text-transform:uppercase;color:var(--mute);margin-bottom:18px}
@@ -73,7 +71,6 @@ button{font-family:inherit}
 .tl-close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:clamp(14px,3vw,32px);background:none;border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer}
 .tracklist button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
 
-/* type & layout */
 .chapter{position:relative}
 .wrap{max-width:1180px;margin:0 auto;padding:clamp(88px,14vh,160px) clamp(20px,5vw,56px) clamp(32px,6vh,64px)}
 .wrap.tight{padding-top:clamp(24px,5vh,56px)}
@@ -88,7 +85,6 @@ button{font-family:inherit}
 .block{margin-top:clamp(56px,10vh,110px)}
 .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
 
-/* ch1 hero */
 .hero{height:100svh;min-height:600px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 20px}
 .hero-inner{position:relative;z-index:2}
 .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.5rem,11.5vw,10.5rem);letter-spacing:-.035em;line-height:.95}
@@ -114,7 +110,6 @@ button{font-family:inherit}
 .particles b{position:absolute;display:block;width:10px;height:10px;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:twinkle ease-in-out infinite}
 @keyframes twinkle{0%,100%{transform:translateY(0) scale(.4);opacity:.1}50%{transform:translateY(-40px) scale(1);opacity:.75}}
 
-/* bracelets */
 .brace{display:block;height:auto;max-width:100%;overflow:visible}
 .brace .str{fill:none;stroke:var(--mute);stroke-width:1.6;stroke-linecap:round;opacity:.7}
 .bead{transform-box:fill-box;transform-origin:50% 50%;transition:opacity .5s,transform .7s cubic-bezier(.3,1.7,.5,1);cursor:default}
@@ -131,7 +126,6 @@ button{font-family:inherit}
 .final .brace{width:min(100%,620px);margin:0 auto 44px}
 .maker-out .brace{width:min(100%,620px);margin:26px auto 0}
 
-/* ch2 */
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-top:56px}
 .stat{border-top:1px solid var(--line);padding-top:16px}
 .stat b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1;letter-spacing:-.03em}
@@ -161,7 +155,6 @@ button{font-family:inherit}
   .pl-line i{transform-origin:50% 0;transform:scaleY(var(--p,1))}
 }
 
-/* ch3 */
 .hscroll{position:relative;height:100svh;min-height:560px;display:flex;align-items:center;overflow:hidden}
 .hscroll::before{content:"";position:absolute;inset:0;background:radial-gradient(55% 62% at 50% 55%,rgba(var(--era-rgb,167,139,250),.15),transparent 72%);transition:opacity .6s;pointer-events:none}
 .htrack{position:relative;display:flex;gap:6vw;padding:0 8vw;width:max-content;align-items:stretch}
@@ -219,7 +212,6 @@ svg .pt:focus{outline:none;stroke:var(--ink)}
 .findings p{font-size:.88rem;color:var(--mute)}
 @media (max-width:899px){.findings{grid-template-columns:1fr}}
 
-/* ch4 */
 .spec{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
 .spec div{border-top:1px solid var(--line);padding-top:14px;font-size:.85rem;color:var(--mute)}
 .spec b{display:block;font:500 .66rem var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--lilac);margin-bottom:6px}
@@ -273,7 +265,6 @@ svg .pt:focus{outline:none;stroke:var(--ink)}
 .callout{border-left:2px solid var(--lilac);padding:4px 0 4px 18px;margin-top:28px;max-width:62ch;font-size:.92rem;color:var(--mute)}
 .callout strong{color:var(--ink);font-weight:500}
 
-/* ch5 */
 .techs{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:44px}
 .techs div{border-top:1px solid var(--line);padding-top:14px}
 .techs b{display:block;font-family:var(--display);font-weight:500;font-size:1.05rem;margin-bottom:6px}
@@ -282,7 +273,6 @@ svg .pt:focus{outline:none;stroke:var(--ink)}
 .corr{display:grid;grid-template-columns:150px 1fr 44px;gap:10px;align-items:center;margin:9px 0;font-size:.8rem;color:var(--mute)}
 .corr b{font-weight:500;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
 
-/* ch6 */
 .big{display:flex;flex-wrap:wrap;gap:20px 56px;margin-top:40px;align-items:flex-end}
 .big div b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(2.6rem,6vw,5rem);line-height:1;letter-spacing:-.03em}
 .big div b em{font-style:normal;color:var(--lilac)}
@@ -305,7 +295,6 @@ svg .pt:focus{outline:none;stroke:var(--ink)}
 .dscale div{display:flex;justify-content:space-between}
 @media (max-width:640px){.arow,.dscale{grid-template-columns:90px 1fr}.arow .av{grid-column:1/-1;text-align:left}.dscale>:last-child{display:none}}
 
-/* ch7 */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
 .chip{border:1px solid var(--line);background:none;color:var(--mute);padding:8px 14px;border-radius:99px;font:500 .8rem var(--text);cursor:pointer;transition:all .25s}
 .chip::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ec,var(--lilac));margin-right:8px}
@@ -330,7 +319,6 @@ svg .pt:focus{outline:none;stroke:var(--ink)}
 .tip{position:fixed;left:0;top:0;z-index:80;background:var(--bg);color:var(--ink);border:1px solid var(--lilac);border-radius:4px;padding:8px 12px;font-size:.78rem;line-height:1.4;pointer-events:none;opacity:0;transition:opacity .15s;max-width:240px}
 .tip.on{opacity:1}
 
-/* ch8 */
 .endintro{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 clamp(20px,5vw,56px);overflow:hidden}
 .endintro h2{position:relative;z-index:2;font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,8vw,7.4rem);line-height:.98;letter-spacing:-.03em;text-transform:uppercase;max-width:14ch}
 .endintro h2 .w{display:inline-block;margin-right:.22em}
@@ -356,7 +344,7 @@ svg .stem.dim{opacity:.15}
 .final q{display:block;font-family:var(--display);font-weight:500;font-size:clamp(1.5rem,3.6vw,3rem);line-height:1.15;letter-spacing:-.02em;max-width:22ch;margin:0 auto;quotes:none}
 .final .by{margin-top:36px;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
 .final .by a{color:var(--ink)}
-.proto{border-top:1px solid var(--faint);padding:28px clamp(20px,5vw,56px) 56px;max-width:1180px;margin:0 auto;font-size:.78rem;color:var(--mute)}
+.proto{border-top:1px solid var(--faint);padding:18px clamp(20px,5vw,56px) 32px;max-width:1180px;margin:0 auto;font-size:.68rem;letter-spacing:.04em;text-align:center;color:var(--mute);opacity:.75}
 @media (prefers-reduced-motion:reduce){.particles b,.scroll-cue i{animation:none}.meter i,.bead{transition:none}.tracklist li button{transition:none}}
 </style>
 </head>
@@ -377,7 +365,6 @@ svg .stem.dim{opacity:.15}
 <div class="tip" id="tip" role="tooltip"></div>
 
 <main>
-<!-- 01 -->
 <section id="c1" class="chapter hero" aria-label="Chapter 1">
   <div class="particles" id="particles" aria-hidden="true"></div>
   <div class="hero-inner">
@@ -391,7 +378,6 @@ svg .stem.dim{opacity:.15}
   <div class="scroll-cue" id="cue"><span data-i="cue">Scroll</span><i></i></div>
 </section>
 
-<!-- 02 -->
 <section id="c2" class="chapter">
   <div class="wrap">
     <p class="kicker rv" data-i="k2">Chapter 02</p>
@@ -407,18 +393,17 @@ svg .stem.dim{opacity:.15}
     <div class="pipe" id="pipe">
       <div class="pl-line" aria-hidden="true"><i id="plFill"></i></div>
       <ol>
-        <li class="on"><span class="n">01</span><h4 data-i="pl1h">Main dataset</h4><p data-i="pl1p">194 songs × 29 columns from the studio albums. The lyrics column arrived empty; there is no popularity column.</p></li>
-        <li class="on"><span class="n">02</span><h4 data-i="pl2h">Cleaning</h4><p data-i="pl2p">3 bonus tracks without audio features removed, empty column dropped: 191 songs × 28 columns.</p></li>
-        <li class="on"><span class="n">03</span><h4 data-i="pl3h">Lyrics join</h4><p data-i="pl3p">A second source, matched by title: 130 songs across 8 albums. It stops at <em>folklore</em>.</p></li>
+        <li class="on"><span class="n">01</span><h4 data-i="pl1h">Main dataset</h4><p data-i="pl1p">194 songs × 29 columns from the studio albums. The lyrics column arrived empty and there is no popularity column.</p></li>
+        <li class="on"><span class="n">02</span><h4 data-i="pl2h">Cleaning</h4><p data-i="pl2p">3 bonus tracks without audio features removed and the empty column dropped, leaving 191 songs × 28 columns.</p></li>
+        <li class="on"><span class="n">03</span><h4 data-i="pl3h">Lyrics join</h4><p data-i="pl3p">A second source, matched by title, gives 130 songs across 8 albums. It stops at <em>folklore</em>.</p></li>
         <li class="on"><span class="n">04</span><h4 data-i="pl4h">Features</h4><p data-i="pl4p">9 audio features, plus text features (sentiment, vocabulary diversity, TF-IDF). Only derived numbers are stored.</p></li>
         <li class="on"><span class="n">05</span><h4 data-i="pl5h">Modeling</h4><p data-i="pl5p">Ridge and Random Forest, validated with shuffled folds and with whole albums held out.</p></li>
       </ol>
     </div>
-    <p class="note rv" data-i="n2">Two sample sizes appear in this story: <strong>191 songs</strong> for the audio-only experiments, <strong>130 songs</strong> for anything involving lyrics. They are never mixed in a comparison.</p>
+    <p class="note rv" data-i="n2">This story uses two sample sizes, <strong>191 songs</strong> for the audio-only experiments and <strong>130 songs</strong> for anything involving lyrics. They are never mixed in a comparison.</p>
   </div>
 </section>
 
-<!-- 03 -->
 <section id="c3" class="chapter">
   <div class="wrap" style="padding-bottom:0">
     <p class="kicker rv" data-i="k3">Chapter 03</p>
@@ -431,7 +416,7 @@ svg .stem.dim{opacity:.15}
       <h3 class="h-md rv" data-i="tl3">The shape of the eras</h3>
       <div class="legend rv"><span style="--c:var(--lilac)" data-i="lg3v">valence</span><span style="--c:var(--ink)" data-i="lg3e">energy</span><span style="--c:var(--purple)" data-i="lg3a">acousticness</span></div>
       <div class="chart-scroll rv"><svg id="lineChart" role="img"></svg></div>
-      <p class="note rv" data-i="n3">Taylor’s Version albums sit in the position of the original era; their audio comes from the re-recordings. Danceability is discussed in the findings but not plotted here — its exact per-album values are not bundled in this prototype.</p>
+      <p class="note rv" data-i="n3">Taylor’s Version albums sit in the position of the original era, and their audio comes from the re-recordings. Danceability is discussed in the findings but not plotted here, since its exact per-album values are not bundled in this prototype.</p>
     </div>
     <div class="block">
       <h3 class="h-md rv" data-i="tl3b">How the audio features relate</h3>
@@ -439,24 +424,23 @@ svg .stem.dim{opacity:.15}
       <div class="heat" id="heat" role="img"></div>
     </div>
     <div class="findings">
-      <div class="rv"><b><i>1</i><span data-i="f1h">Acoustic turn</span></b><p data-i="f1p">Acousticness jumps to 0.72 in <em>folklore</em> and 0.79 in <em>evermore</em>; the other eight albums stay between 0.14 and 0.41.</p></div>
+      <div class="rv"><b><i>1</i><span data-i="f1h">Acoustic turn</span></b><p data-i="f1p">Acousticness jumps to 0.72 in <em>folklore</em> and 0.79 in <em>evermore</em>, while the other eight albums stay between 0.14 and 0.41.</p></div>
       <div class="rv"><b><i>2</i><span data-i="f2h">Dark but danceable</span></b><p data-i="f2p"><em>reputation</em> (0.29) and <em>Midnights</em> (0.28) have the lowest valence, while danceability stays high (roughly 0.63–0.66, read from the chart).</p></div>
       <div class="rv"><b><i>3</i><span data-i="f3h">Energy tracks mood</span></b><p data-i="f3p">Energy correlates with valence at r = 0.51. That is an association, not a cause — and energy overlaps heavily with loudness (r = 0.80).</p></div>
     </div>
   </div>
 </section>
 
-<!-- 04 -->
 <section id="c4" class="chapter">
   <div class="wrap" style="padding-bottom:0">
     <p class="kicker rv" data-i="k4">Chapter 04</p>
     <h2 class="h-xl rv" data-i="t4">Can we predict<br>how a song feels?</h2>
-    <p class="lede rv" data-i="l4">A regression problem: use what a song <em>sounds like</em> to estimate its valence, then check the estimate on songs the model has never seen.</p>
+    <p class="lede rv" data-i="l4">This is a regression problem. We use what a song <em>sounds like</em> to estimate its valence, then check the estimate on songs the model has never seen.</p>
     <div class="spec rv">
       <div><b data-i="sp1b">Target</b><span data-i="sp1">valence, from 0 (negative) to 1 (positive)</span></div>
-      <div><b data-i="sp2b">Predictors</b><span data-i="sp2">9 audio features: danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duration, mode</span></div>
+      <div><b data-i="sp2b">Predictors</b><span data-i="sp2">9 audio features (danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duration and mode)</span></div>
       <div><b data-i="sp3b">Models</b><span data-i="sp3">Ridge (standardized features) and Random Forest (300 trees), against a “predict the mean” baseline</span></div>
-      <div><b data-i="sp4b">Validation</b><span data-i="sp4">5 shuffled folds — and the stricter test: whole albums held out</span></div>
+      <div><b data-i="sp4b">Validation</b><span data-i="sp4">5 shuffled folds, and the stricter test of holding whole albums out</span></div>
     </div>
   </div>
   <div class="scene" id="scene4">
@@ -482,7 +466,7 @@ svg .stem.dim{opacity:.15}
   </div>
   <div class="wrap tight">
     <h3 class="h-md rv" data-i="r2h">How good is the prediction?</h3>
-    <p class="lede rv" style="margin-top:0" data-i="r2l"><strong>R²</strong> is the share of the variation in valence that the model explains. It is <strong>not</strong> a percentage of correct predictions: 0 means no better than guessing the average, 1 would be perfect.</p>
+    <p class="lede rv" style="margin-top:0" data-i="r2l"><strong>R²</strong> is the share of the variation in valence that the model explains. It is <strong>not</strong> a percentage of correct predictions. A value of 0 means no better than guessing the average and 1 would be perfect.</p>
     <div class="block" style="margin-top:36px">
       <p class="feat-h" data-i="r2f">R² — higher is better</p>
       <div id="r2Rows"></div>
@@ -501,7 +485,6 @@ svg .stem.dim{opacity:.15}
   </div>
 </section>
 
-<!-- 05 -->
 <section id="c5" class="chapter">
   <div class="wrap">
     <p class="kicker rv" data-i="k5">Chapter 05</p>
@@ -524,7 +507,7 @@ svg .stem.dim{opacity:.15}
         <div class="chart-scroll rv"><svg id="vb5b" role="img"></svg></div>
       </div>
     </div>
-    <p class="callout rv" data-i="co5"><strong>No consistent gain from lyrics.</strong> Audio + TF-IDF roughly ties audio alone (0.23 vs 0.24, 0.22 vs 0.22) and is lower at the weakest penalty (0.15 vs 0.21); simple text features lower it (0.10 vs 0.21). Text on its own does no better than the mean baseline. With 8 albums the fold-to-fold spread is huge (up to ±0.46 for the simple features), so small gaps here are noise — the safe reading is that there is no evidence lyrics help.</p>
+    <p class="callout rv" data-i="co5"><strong>No consistent gain from lyrics.</strong> Audio + TF-IDF roughly ties audio alone (0.23 vs 0.24, 0.22 vs 0.22) and is lower at the weakest penalty (0.15 vs 0.21), while simple text features lower it (0.10 vs 0.21). Text on its own does no better than the mean baseline. With 8 albums the fold-to-fold spread is huge (up to ±0.46 for the simple features), so small gaps here are noise — the safe reading is that there is no evidence lyrics help.</p>
     <div class="block">
       <h3 class="h-md rv" data-i="h5c">How each text feature relates to valence</h3>
       <p class="lede rv" style="margin-top:0" data-i="l5c">Correlation on the 130 songs — exploratory only.</p>
@@ -534,7 +517,6 @@ svg .stem.dim{opacity:.15}
   </div>
 </section>
 
-<!-- 06 -->
 <section id="c6" class="chapter">
   <div class="wrap">
     <p class="kicker rv" data-i="k6">Chapter 06</p>
@@ -556,12 +538,11 @@ svg .stem.dim{opacity:.15}
       <div class="legend rv"><span style="--c:var(--ink)" data-i="lgAc">actual</span><span style="--c:var(--lilac)" data-i="lgPr">predicted when the album is held out</span></div>
       <div class="dscale"><span></span><div id="dsc"></div><span></span></div>
       <div id="dumbAlb"></div>
-      <p class="callout rv" data-i="co6"><strong>The model over-estimates the mood of the two darkest albums.</strong> It predicts about 0.42 for <em>reputation</em> (actual 0.29) and 0.39 for <em>Midnights</em> (actual 0.28). A plausible reason is that high danceability reads as “happy” to an audio-only model — an explanation to test, not something this project has shown. Predictions are also compressed toward the middle: the model has trouble at the extremes.</p>
+      <p class="callout rv" data-i="co6"><strong>The model over-estimates the mood of the two darkest albums.</strong> It predicts about 0.42 for <em>reputation</em> (actual 0.29) and 0.39 for <em>Midnights</em> (actual 0.28). A plausible reason is that high danceability reads as “happy” to an audio-only model (an explanation to test, not something this project has shown). Predictions are also compressed toward the middle, so the model has trouble at the extremes.</p>
     </div>
   </div>
 </section>
 
-<!-- 07 -->
 <section id="c7" class="chapter">
   <div class="wrap">
     <p class="kicker rv" data-i="k7">Chapter 07</p>
@@ -593,7 +574,6 @@ svg .stem.dim{opacity:.15}
   </div>
 </section>
 
-<!-- 08 -->
 <section id="c8" class="chapter">
   <div class="endintro" id="endIntro">
     <svg class="endline" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="eraGrad" x1="0" y1="0" x2="1" y2="0"></linearGradient></defs><path id="endPath" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:0;stroke:url(#eraGrad)"/></svg>
@@ -604,18 +584,18 @@ svg .stem.dim{opacity:.15}
     <div class="cols">
       <div>
         <ul>
-          <li class="rv" data-i="fd1"><strong>Audio explains part of the variation in valence.</strong> Ridge reaches R² 0.33 with whole albums held out (191 songs); the mean baseline sits near zero.</li>
-          <li class="rv" data-i="fd2"><strong>It beats the baseline on 9 of 10 albums</strong> (error 0.125 vs 0.157); <em>folklore</em> is a tie.</li>
+          <li class="rv" data-i="fd1"><strong>Audio explains part of the variation in valence.</strong> Ridge reaches R² 0.33 with whole albums held out (191 songs), while the mean baseline sits near zero.</li>
+          <li class="rv" data-i="fd2"><strong>It beats the baseline on 9 of 10 albums</strong> (error 0.125 vs 0.157), with <em>folklore</em> as a tie.</li>
           <li class="rv" data-i="fd3"><strong>Lyrics added no consistent gain</strong> on the 130 songs that have them.</li>
-          <li class="rv" data-i="fd4"><strong>Generalisation varies by era:</strong> <em>reputation</em> and <em>Midnights</em> are over-estimated by about 0.13 and 0.10.</li>
+          <li class="rv" data-i="fd4"><strong>Generalisation varies by era.</strong> <em>reputation</em> and <em>Midnights</em> are over-estimated by about 0.13 and 0.10.</li>
           <li class="rv" data-i="fd5"><strong>The sample is small,</strong> so these are exploratory findings, not universal ones. Correlation is not causation, and prediction is not explanation.</li>
         </ul>
       </div>
       <div>
         <h3 class="rv" data-i="limh">Limitations</h3>
         <ul>
-          <li class="rv" data-i="lim1">191 songs; folds with only 1–2 albums (130 songs, 8 albums with lyrics), so the spread across folds is large.</li>
-          <li class="rv" data-i="lim2">Lyrics stop at <em>folklore</em>; <em>evermore</em> and <em>Midnights</em> are not in the text experiments.</li>
+          <li class="rv" data-i="lim1">191 songs, with folds of only 1–2 albums (130 songs and 8 albums with lyrics), so the spread across folds is large.</li>
+          <li class="rv" data-i="lim2">Lyrics stop at <em>folklore</em>, so <em>evermore</em> and <em>Midnights</em> are not in the text experiments.</li>
           <li class="rv" data-i="lim3">Audio for Fearless, Red and Speak Now comes from the Taylor’s Version re-recordings.</li>
           <li class="rv" data-i="lim4">Valence is itself a score computed by Spotify, not a human rating.</li>
           <li class="rv" data-i="lim5">The Ridge penalty was compared on the same data used for evaluation, which can flatter the best setting.</li>
@@ -627,17 +607,17 @@ svg .stem.dim{opacity:.15}
       <div>
         <h3 class="rv" data-i="srch">Sources &amp; method</h3>
         <ul>
-          <li class="rv" data-i="src1">Audio features and album metadata: TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (from the R <code>taylor</code> package; Spotify API data).</li>
-          <li class="rv" data-i="src2">Lyrics: TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. Not redistributed; only derived numbers are versioned.</li>
-          <li class="rv" data-i="src3">Scripts: <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.</li>
+          <li class="rv" data-i="src1">Audio features and album metadata come from TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (from the R <code>taylor</code> package, with Spotify API data).</li>
+          <li class="rv" data-i="src2">Lyrics come from TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. They are not redistributed and only derived numbers are versioned.</li>
+          <li class="rv" data-i="src3">The scripts are <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.</li>
         </ul>
       </div>
       <div>
         <h3 class="rv" data-i="techh">Tech</h3>
         <ul>
-          <li class="rv" data-i="tc1"><strong>Analysis:</strong> Python, pandas, scikit-learn, matplotlib, seaborn, Streamlit.</li>
-          <li class="rv" data-i="tc2"><strong>This page:</strong> HTML, CSS, JavaScript, GSAP + ScrollTrigger, SVG.</li>
-          <li class="rv" data-i="tc3"><strong>Code &amp; credits:</strong> <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a> — project by Laura Vieira.</li>
+          <li class="rv" data-i="tc1"><strong>Analysis</strong> with Python, pandas, scikit-learn, matplotlib, seaborn and Streamlit.</li>
+          <li class="rv" data-i="tc2"><strong>This page</strong> uses HTML, CSS, JavaScript, GSAP + ScrollTrigger and SVG.</li>
+          <li class="rv" data-i="tc3"><strong>Code &amp; credits</strong> at <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a>, a project by Laura Vieira.</li>
         </ul>
       </div>
     </div>
@@ -645,12 +625,12 @@ svg .stem.dim{opacity:.15}
   <div class="wrap tight maker">
     <p class="kicker rv" data-i="kmk">Trade a bracelet</p>
     <h3 class="h-md rv" data-i="mkt">Make one with your own word.</h3>
-    <p class="note rv" style="margin-top:0" data-i="mkn">At concerts, fans trade friendship bracelets. Here is a digital one: type up to 11 letters or numbers.</p>
+    <p class="note rv" style="margin-top:0" data-i="mkn">At concerts, fans trade friendship bracelets. Here is a digital one, so type up to 11 letters or numbers.</p>
     <div class="ctrl rv"><input type="text" id="mkInput" maxlength="11" value="SWIFTLYTICS" autocomplete="off" spellcheck="false"><button class="chip plain" id="mkShuffle" type="button" data-i="mks">Shuffle colors</button></div>
     <div class="maker-out" id="mkOut"></div>
   </div>
   <div class="final"><div id="finalBrace"></div><q class="rv" data-i="fq">“Every song has a feeling. Data helps us understand part of it.”</q><p class="by rv" data-i="by">Swiftlytics · The science behind music</p></div>
-  <p class="proto" data-i="proto"><span class="badge">prototype</span>All values are copied from the project’s script outputs. Per-song data exists here only for 10 songs of the album <em>Taylor Swift</em>; other albums show a marked placeholder until the full export is added.</p>
+  <p class="proto" data-i="proto">Prototype with values copied from the project’s scripts.</p>
 </section>
 </main>
 
@@ -668,7 +648,6 @@ var clamp=function(x,a,b){a=a==null?0:a;b=b==null?1:b;return Math.min(b,Math.max
 var ease=function(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;};
 var sm=function(a,b,x){x=clamp((x-a)/(b-a));return x*x*(3-2*x);};
 
-/* ---------- language ---------- */
 function pickLang(){
   var hv=(location.hash||'').replace('#','').toLowerCase();
   if(hv==='pt'||hv==='en')return hv;
@@ -690,26 +669,26 @@ t2:'Por trás<br>dos dados.',
 l2:'Duas fontes públicas, uma pergunta. Os números desta página vêm das saídas dos scripts do próprio projeto. A <strong>valência</strong> é a nota de 0 a 1 do Spotify para o quanto uma faixa soa positiva — o alvo aqui. A popularidade <strong>não</strong> faz parte deste estudo.',
 s1:'músicas após a limpeza',s2:'colunas originais',s3:'músicas com letra',s4:'álbuns com letra',s5:'fontes de dados',
 pl1h:'Base principal',pl1p:'194 músicas × 29 colunas dos álbuns de estúdio. A coluna de letras veio vazia e não há coluna de popularidade.',
-pl2h:'Limpeza',pl2p:'3 faixas bônus sem features de áudio removidas e coluna vazia descartada: 191 músicas × 28 colunas.',
-pl3h:'União com as letras',pl3p:'Uma segunda fonte, cruzada pelo título: 130 músicas em 8 álbuns. Ela termina em <em>folklore</em>.',
+pl2h:'Limpeza',pl2p:'3 faixas bônus sem features de áudio removidas e coluna vazia descartada, restando 191 músicas × 28 colunas.',
+pl3h:'União com as letras',pl3p:'Uma segunda fonte, cruzada pelo título, traz 130 músicas em 8 álbuns. Ela termina em <em>folklore</em>.',
 pl4h:'Features',pl4p:'9 features de áudio, mais features de texto (sentimento, diversidade de vocabulário, TF-IDF). Só números derivados são guardados.',
 pl5h:'Modelagem',pl5p:'Ridge e Random Forest, validados com folds embaralhados e com álbuns inteiros de fora.',
-n2:'Duas amostras aparecem nesta história: <strong>191 músicas</strong> nos experimentos só com áudio e <strong>130 músicas</strong> em tudo que envolve letras. Elas nunca são misturadas numa comparação.',
+n2:'Esta história usa duas amostras, <strong>191 músicas</strong> nos experimentos só com áudio e <strong>130 músicas</strong> em tudo que envolve letras. Elas nunca são misturadas numa comparação.',
 t3:'Cada era tem<br>o seu som.',
 l3:'Valência, energia e acusticidade médias de cada álbum, na ordem das eras. Role para o lado por dez álbuns.',
 hhint:'Role → dez eras',tl3:'O formato das eras',lg3v:'valência',lg3e:'energia',lg3a:'acusticidade',
-n3:'Os álbuns Taylor’s Version ficam na posição da era original; o áudio deles vem das regravações. A dançabilidade aparece nos achados, mas não no gráfico — os valores exatos por álbum não estão neste protótipo.',
+n3:'Os álbuns Taylor’s Version ficam na posição da era original, e o áudio deles vem das regravações. A dançabilidade aparece nos achados, mas não no gráfico, porque os valores exatos por álbum não estão neste protótipo.',
 tl3b:'Como as features de áudio se relacionam',
 l3b:'Correlação de Pearson nas 191 músicas. A primeira linha é a valência — a variável que queremos prever.',
-f1h:'Virada acústica',f1p:'A acusticidade salta para 0,72 em <em>folklore</em> e 0,79 em <em>evermore</em>; os outros oito álbuns ficam entre 0,14 e 0,41.',
+f1h:'Virada acústica',f1p:'A acusticidade salta para 0,72 em <em>folklore</em> e 0,79 em <em>evermore</em>, enquanto os outros oito álbuns ficam entre 0,14 e 0,41.',
 f2h:'Sombrio, mas dançante',f2p:'<em>reputation</em> (0,29) e <em>Midnights</em> (0,28) têm as menores valências, enquanto a dançabilidade segue alta (cerca de 0,63–0,66, lida do gráfico).',
 f3h:'Energia acompanha o humor',f3p:'A energia se correlaciona com a valência em r = 0,51. É uma associação, não uma causa — e a energia se sobrepõe muito ao volume (r = 0,80).',
 t4:'Conseguimos prever<br>o que uma música faz sentir?',
-l4:'Um problema de regressão: usar como uma música <em>soa</em> para estimar sua valência e conferir a estimativa em músicas que o modelo nunca viu.',
+l4:'Este é um problema de regressão. Usamos como uma música <em>soa</em> para estimar sua valência e conferimos a estimativa em músicas que o modelo nunca viu.',
 sp1b:'Alvo',sp1:'valência, de 0 (negativa) a 1 (positiva)',
-sp2b:'Preditores',sp2:'9 features de áudio: danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duração e modo',
+sp2b:'Preditores',sp2:'9 features de áudio (danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duração e modo)',
 sp3b:'Modelos',sp3:'Ridge (features padronizadas) e Random Forest (300 árvores), contra uma base “prever a média”',
-sp4b:'Validação',sp4:'5 folds embaralhados — e o teste mais duro: álbuns inteiros de fora',
+sp4b:'Validação',sp4:'5 folds embaralhados, e o teste mais duro de deixar álbuns inteiros de fora',
 fh:'Pesos do Ridge · padronizados · ajustados nas 191 músicas',gh:'Exemplo · álbum fora do treino',
 gsub:'do álbum <em>Taylor Swift</em>',mkp:'previsto 0,76',mka:'real 0,82',
 sc1:'Uma música vira nove números que descrevem como ela soa…',
@@ -717,7 +696,7 @@ sc2:'…cada um com o peso dado pelo modelo, e energy e acousticness carregam ma
 sc3:'…e o resultado é lido como uma valência prevista, para comparar com a real.',
 sfn:'Energy, loudness e acousticness são muito correlacionadas entre si, então leia os pesos em conjunto, não um por um.',
 r2h:'Qual a qualidade da previsão?',
-r2l:'O <strong>R²</strong> é a parcela da variação da valência que o modelo explica. <strong>Não</strong> é uma porcentagem de acertos: 0 significa não ser melhor que chutar a média; 1 seria perfeito.',
+r2l:'O <strong>R²</strong> é a parcela da variação da valência que o modelo explica. <strong>Não</strong> é uma porcentagem de acertos. O valor 0 significa não ser melhor que chutar a média e 1 seria perfeito.',
 r2f:'R² — quanto maior, melhor',maef:'Erro absoluto médio, em pontos de valência — quanto menor, melhor',
 co4:'<strong>Deixar álbuns inteiros de fora é o teste mais duro</strong>, porque o modelo não ouve nenhuma música do álbum que está prevendo. O R² cai de 0,40 para 0,33 — ainda acima da base, mas o número com folds embaralhados era otimista. O Random Forest só foi rodado com folds embaralhados, então compare-o com os 0,40 do Ridge, não com os 0,33.',
 avp:'Real vs previsto',
@@ -730,7 +709,7 @@ te2b:'Diversidade de vocabulário',te2:'Palavras únicas divididas pelo total de
 te3b:'TF-IDF',te3:'Até 300 palavras que caracterizam cada música frente às outras (mantidas se usadas em 3+ músicas), adicionadas ao Ridge com três intensidades de penalização.',
 h5a:'Só áudio vs áudio + TF-IDF',lgA:'só áudio',lgAT:'áudio + TF-IDF',lgT:'só TF-IDF',
 h5b:'Features simples de texto',lgA2:'só áudio',lgAS:'áudio + texto simples',lgTx:'só texto',
-co5:'<strong>Nenhum ganho consistente com as letras.</strong> Áudio + TF-IDF praticamente empata com só áudio (0,23 vs 0,24; 0,22 vs 0,22) e fica abaixo na penalização mais fraca (0,15 vs 0,21); as features simples de texto reduzem o R² (0,10 vs 0,21). O texto sozinho não faz melhor que a base da média. Com 8 álbuns, a variação entre folds é enorme (até ±0,46 nas features simples), então diferenças pequenas são ruído — a leitura segura é que não há evidência de que as letras ajudem.',
+co5:'<strong>Nenhum ganho consistente com as letras.</strong> Áudio + TF-IDF praticamente empata com só áudio (0,23 vs 0,24 e 0,22 vs 0,22) e fica abaixo na penalização mais fraca (0,15 vs 0,21), enquanto as features simples de texto reduzem o R² (0,10 vs 0,21). O texto sozinho não faz melhor que a base da média. Com 8 álbuns, a variação entre folds é enorme (até ±0,46 nas features simples), então diferenças pequenas são ruído — a leitura segura é que não há evidência de que as letras ajudem.',
 h5c:'Como cada feature de texto se relaciona com a valência',l5c:'Correlação nas 130 músicas — apenas exploratória.',
 n5c:'A parcela de palavras negativas se correlaciona <em>positivamente</em> com a valência (0,24) e a pontuação geral de sentimento, <em>negativamente</em> (−0,21). É o oposto do que as palavras sozinhas sugeririam, o que é compatível com letras tristes sobre sons animados — mas é uma hipótese, não um resultado deste estudo.',
 t6:'O modelo entende<br>todas as eras?',
@@ -739,38 +718,38 @@ bg1:'álbuns em que o modelo vence a base',bg2:'erro do modelo (absoluto médio)
 h6a:'Erro por álbum',lgM:'modelo',lgB:'base',
 n6a:'<em>folklore</em> é o único empate (o modelo fica 0,003 pior que a base). Os maiores ganhos estão em <em>Red</em>, <em>Fearless</em>, <em>Speak Now</em> e <em>1989</em>.',
 h6b:'Valência real vs prevista, média do álbum',lgAc:'real',lgPr:'prevista com o álbum fora do treino',
-co6:'<strong>O modelo superestima o humor dos dois álbuns mais sombrios.</strong> Ele prevê cerca de 0,42 para <em>reputation</em> (real 0,29) e 0,39 para <em>Midnights</em> (real 0,28). Uma razão plausível é que dançabilidade alta soe “feliz” para um modelo só de áudio — uma explicação a testar, não algo que este projeto mostrou. As previsões também ficam comprimidas em direção ao meio: o modelo tem dificuldade nos extremos.',
+co6:'<strong>O modelo superestima o humor dos dois álbuns mais sombrios.</strong> Ele prevê cerca de 0,42 para <em>reputation</em> (real 0,29) e 0,39 para <em>Midnights</em> (real 0,28). Uma razão plausível é que dançabilidade alta soe “feliz” para um modelo só de áudio (uma explicação a testar, não algo que este projeto mostrou). As previsões também ficam comprimidas em direção ao meio, então o modelo tem dificuldade nos extremos.',
 t7:'Sua vez<br>de explorar.',l7:'Escolha um álbum e veja como o modelo, com ele fora do treino, o tratou.',
 dbh:'Real ○ → previsto ●',
 n7s:'<span class="badge">amostra</span>10 de 15 músicas do álbum <em>Taylor Swift</em>. Passe o mouse ou toque num ponto para ver detalhes.',
 lblerr:'só erros ≥ 0,10',th1:'#',th2:'Música',th3:'Real',th4:'Previsto',th5:'Erro',
 n7t:'Erro = previsto − real. Positivo significa que o modelo ouviu a música como mais feliz do que ela é.',
 kfound:'O que encontramos',
-fd1:'<strong>O áudio explica parte da variação da valência.</strong> O Ridge chega a R² 0,33 com álbuns inteiros de fora (191 músicas); a base da média fica perto de zero.',
-fd2:'<strong>Ele vence a base em 9 de 10 álbuns</strong> (erro 0,125 vs 0,157); <em>folklore</em> é um empate.',
+fd1:'<strong>O áudio explica parte da variação da valência.</strong> O Ridge chega a R² 0,33 com álbuns inteiros de fora (191 músicas), enquanto a base da média fica perto de zero.',
+fd2:'<strong>Ele vence a base em 9 de 10 álbuns</strong> (erro 0,125 vs 0,157), com <em>folklore</em> empatando.',
 fd3:'<strong>As letras não trouxeram ganho consistente</strong> nas 130 músicas que as têm.',
-fd4:'<strong>A generalização varia por era:</strong> <em>reputation</em> e <em>Midnights</em> são superestimados em cerca de 0,13 e 0,10.',
+fd4:'<strong>A generalização varia por era.</strong> <em>reputation</em> e <em>Midnights</em> são superestimados em cerca de 0,13 e 0,10.',
 fd5:'<strong>A amostra é pequena,</strong> então estes são achados exploratórios, não universais. Correlação não é causalidade, e previsão não é explicação.',
 limh:'Limitações',
-lim1:'191 músicas; folds com só 1–2 álbuns (130 músicas e 8 álbuns com letra), então a variação entre folds é grande.',
-lim2:'As letras param em <em>folklore</em>; <em>evermore</em> e <em>Midnights</em> não entram nos experimentos de texto.',
+lim1:'191 músicas, com folds de só 1–2 álbuns (130 músicas e 8 álbuns com letra), então a variação entre folds é grande.',
+lim2:'As letras param em <em>folklore</em>, então <em>evermore</em> e <em>Midnights</em> não entram nos experimentos de texto.',
 lim3:'O áudio de Fearless, Red e Speak Now vem das regravações Taylor’s Version.',
 lim4:'A valência é uma nota calculada pelo Spotify, não uma avaliação humana.',
 lim5:'A penalização do Ridge foi comparada nos mesmos dados usados na avaliação, o que pode favorecer a melhor configuração.',
 lim6:'O VADER foi projetado para textos curtos de redes sociais.',
 srch:'Fontes e método',
-src1:'Features de áudio e metadados dos álbuns: TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (do pacote R <code>taylor</code>; dados da API do Spotify).',
-src2:'Letras: TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. Não redistribuídas; só números derivados são versionados.',
-src3:'Scripts: <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.',
+src1:'Features de áudio e metadados dos álbuns vêm do TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (do pacote R <code>taylor</code>, com dados da API do Spotify).',
+src2:'As letras vêm do TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. Elas não são redistribuídas e só números derivados são versionados.',
+src3:'Os scripts são <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.',
 techh:'Tecnologia',
-tc1:'<strong>Análise:</strong> Python, pandas, scikit-learn, matplotlib, seaborn, Streamlit.',
-tc2:'<strong>Esta página:</strong> HTML, CSS, JavaScript, GSAP + ScrollTrigger, SVG.',
-tc3:'<strong>Código e créditos:</strong> <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a> — projeto de Laura Vieira.',
+tc1:'<strong>Análise</strong> com Python, pandas, scikit-learn, matplotlib, seaborn e Streamlit.',
+tc2:'<strong>Esta página</strong> usa HTML, CSS, JavaScript, GSAP + ScrollTrigger e SVG.',
+tc3:'<strong>Código e créditos</strong> em <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a>, projeto de Laura Vieira.',
 kmk:'Troque uma pulseira',mkt:'Monte uma com a sua palavra.',
-mkn:'Nos shows, os fãs trocam pulseiras da amizade. Aqui vai uma digital: digite até 11 letras ou números.',mks:'Misturar cores',
+mkn:'Nos shows, os fãs trocam pulseiras da amizade. Aqui vai uma digital, então digite até 11 letras ou números.',mks:'Misturar cores',
 fq:'“Toda música carrega um sentimento. Os dados nos ajudam a entender parte dele.”',
 by:'Swiftlytics · A ciência por trás da música',
-proto:'<span class="badge">protótipo</span>Todos os valores foram copiados das saídas dos scripts do projeto. Dados por música existem aqui só para 10 músicas do álbum <em>Taylor Swift</em>; os outros álbuns mostram um aviso marcado como placeholder até que a exportação completa seja adicionada.'
+proto:'Protótipo com valores copiados dos scripts do projeto.'
 };
 $$('[data-i]').forEach(function(el){if(PT&&DICT[el.getAttribute('data-i')]!=null)el.innerHTML=DICT[el.getAttribute('data-i')];});
 document.title=L('SWIFTLYTICS — The Science Behind Music','SWIFTLYTICS — A Ciência por Trás da Música');
@@ -788,7 +767,6 @@ document.title=L('SWIFTLYTICS — The Science Behind Music','SWIFTLYTICS — A C
   $('#exQ').setAttribute('placeholder',L('Filter songs…','Filtrar músicas…'));$('#exQ').setAttribute('aria-label',L('Filter songs by title','Filtrar músicas por título'));
   $('#mkInput').setAttribute('aria-label',L('Bracelet text','Texto da pulseira'));
   $('#exBadge').textContent=L('placeholder','placeholder');
-  // decimal separators in the static big numbers
   $$('.dec').forEach(function(e){e.textContent=PT?',':'.';});
   $$('.gauge .tk').forEach(function(e,i){if(i===1)e.textContent=PT?'0,5':'0.5';});
 })();
@@ -802,7 +780,6 @@ function setLang(l){
 $('#langEn').addEventListener('click',function(){setLang('en');});
 $('#langPt').addEventListener('click',function(){setLang('pt');});
 
-/* ---------- REAL DATA (copied from the project's outputs) ---------- */
 var ERAS=['Taylor Swift','Fearless (Taylor\u2019s Version)','Speak Now','Red (Taylor\u2019s Version)','1989','reputation','Lover','folklore','evermore','Midnights'];
 var SHORT=['Taylor Swift','Fearless TV','Speak Now','Red TV','1989','reputation','Lover','folklore','evermore','Midnights'];
 var BRACE=['TAYLORSWIFT','FEARLESS','SPEAKNOW','RED','1989','REPUTATION','LOVER','FOLKLORE','EVERMORE','MIDNIGHTS'];
@@ -847,7 +824,6 @@ var NOTES={
 var CH=[['The question','A pergunta'],['Behind the data','Por trás dos dados'],['The musical patterns','Os padrões musicais'],['Can audio predict mood?','O áudio prevê o humor?'],['Beyond the sound','Além do som'],['The album test','O teste por álbum'],['Explore the data','Explore os dados'],['The conclusion','A conclusão']];
 var pad2=function(n){return (n<10?'0':'')+n;};
 
-/* ---------- album colours (fan-associated era palette) + bracelets ---------- */
 var EC=['#5FB8A6','#E3B04B','#A56FD6','#C2263F','#7CC6EE','#B9B9C4','#F4A3C6','#C9C3B4','#D08A3C','#5B6CE6'];
 function hexRgb(hex){var n=parseInt(hex.slice(1),16);return (n>>16&255)+','+(n>>8&255)+','+(n&255);}
 function lumin(hex){var n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;return (.2126*r+.7152*g+.0722*b)/255;}
@@ -887,7 +863,6 @@ var hasG=!!(window.gsap&&window.ScrollTrigger);
 if(hasG){gsap.registerPlugin(ScrollTrigger);}
 var motion=hasG&&!reduce;
 
-/* ---------- tooltip ---------- */
 var tip=$('#tip');
 function tipOn(el,html){
   el.setAttribute('tabindex','0');
@@ -899,7 +874,6 @@ function tipOn(el,html){
   el.addEventListener('blur',function(){tip.classList.remove('on');});
 }
 
-/* ---------- HUD, vinyl, tracklist ---------- */
 var bar=$('#bar'),vinyl=$('#vinyl');
 function hud(){var d=document.documentElement.scrollHeight-innerHeight;bar.style.transform='scaleX('+(d>0?clamp(scrollY/d):0)+')';if(!reduce)vinyl.style.transform='rotate('+(scrollY*.18)+'deg)';}
 addEventListener('scroll',hud,{passive:true});addEventListener('resize',hud);hud();
@@ -923,7 +897,6 @@ setLabel(0);
   addEventListener('keydown',function(e){if(e.key==='Escape'&&!tl.hidden){close();btn.focus();}});
 })();
 
-/* ---------- 01 hero wave ---------- */
 (function(){
   var N=160,W=1200;
   var yv=function(v){return 330-(v-.25)*(260/.30);};
@@ -950,7 +923,6 @@ setLabel(0);
   for(var k=0;k<34;k++){var b=document.createElement('b');b.style.left=(Math.random()*100)+'%';b.style.top=(10+Math.random()*80)+'%';b.style.background=EC[k%EC.length];b.style.animationDuration=(5+Math.random()*7)+'s';b.style.animationDelay=(-Math.random()*8)+'s';b.style.width=b.style.height=(6+Math.random()*8)+'px';pc.appendChild(b);}
 })();
 
-/* ---------- 03 era panels ---------- */
 (function(){
   var tr=$('#htrack');
   ERAS.forEach(function(name,i){
@@ -965,7 +937,6 @@ setLabel(0);
     a.appendChild(bracelet(BRACE[i],{r:11,sp:4,lc:[EC[i]],sc:['#FFFFFF',EC[i]]}));
     tr.appendChild(a);
   });
-  // line chart
   var svg=$('#lineChart'),W=1000,H=440,L0=54,R0=890,T=30,B=360;
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   var X=function(i){return L0+i/9*(R0-L0);},Y=function(v){return B-v/.85*(B-T);};
@@ -992,7 +963,6 @@ setLabel(0);
     });
     var lb=s('text',{x:R0+14,y:Y(sr[0][9])+4,'class':'axb'},svg);lb.textContent=sr[2];lb.style.fill=sr[1];
   });
-  // heatmap
   var heat=$('#heat');
   heat.appendChild(h('div',{}));
   VSHORT.forEach(function(n){heat.appendChild(h('div',{class:'hh'},n));});
@@ -1010,7 +980,6 @@ setLabel(0);
   });
 })();
 
-/* ---------- 04 scene + results ---------- */
 function scatter(svg,pts){
   var W=440,H=440,L0=58,R0=18,T=18,B=54,lo=.1,hi=.9;
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
@@ -1061,7 +1030,6 @@ function rowBars(box,rows,max){
   scatter($('#scat4'),SONGS);
 })();
 
-/* ---------- 05 lyrics ---------- */
 function vbars(svg,o){
   var W=o.W||900,H=o.H||400,L0=58,R0=20,T=24,B=74,pw=W-L0-R0,ph=H-T-B;
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
@@ -1107,7 +1075,6 @@ function vbars(svg,o){
   });
 })();
 
-/* ---------- 06 album test ---------- */
 function dumbRow(real,pred){
   var lo=.2,hi=.56,pos=function(v){return clamp((v-lo)/(hi-lo))*100;};
   var d=h('div',{class:'db'});
@@ -1137,7 +1104,6 @@ function dumbRow(real,pred){
   });
 })();
 
-/* ---------- 07 explorer ---------- */
 (function(){
   var sel=0,chips=$('#exChips');
   var rankOf=function(i){var g=A[i].gain;return 1+A.filter(function(a){return a.gain>g;}).length;};
@@ -1183,7 +1149,6 @@ function dumbRow(real,pred){
   render();
 })();
 
-/* ---------- 08 ending line, bracelets, maker ---------- */
 var makerRender;
 (function(){
   var N0=160,W=1200,yv=function(v){return 330-(v-.25)*(260/.30);},tg=A.map(function(a){return yv(a.real);}),d='';
@@ -1194,7 +1159,6 @@ var makerRender;
   el.innerHTML=el.textContent.split(' ').map(function(w){return '<span class="w">'+w+'</span>';}).join('');
   $('#heroBrace').appendChild(bracelet('SWIFTLYTICS',{r:13,nt:true}));
   $('#finalBrace').appendChild(bracelet(L('FEELING','SENTIMENTO'),{r:18,sp:6,nt:true}));
-  // maker
   var out=$('#mkOut'),input=$('#mkInput'),colors=EC.slice();
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
   makerRender=function(animate){
@@ -1208,7 +1172,6 @@ var makerRender;
   makerRender(false);
 })();
 
-/* ---------- ANIMATION LAYER ---------- */
 if(hasG){
   var mm=gsap.matchMedia();
   mm.add({desktop:'(min-width: 900px)',motion:'(prefers-reduced-motion: no-preference)'},function(ctx){
@@ -1221,7 +1184,6 @@ if(hasG){
     if(!c.motion){window.__heroSet(0);labels();return;}
     document.documentElement.classList.add('js-motion');
 
-    // 01 hero
     var title=$('#heroTitle'),q=$('#heroQ'),cue=$('#cue'),cap=$('#waveCap');
     ScrollTrigger.create({trigger:'#c1',start:'top top',end:c.desktop?'+=260%':'+=210%',pin:true,anticipatePin:1,onUpdate:function(self){
       var p=self.progress;window.__heroSet(p);
@@ -1236,7 +1198,6 @@ if(hasG){
     gsap.from('#heroTitle .tag',{opacity:0,duration:1.2,delay:.6});
     gsap.from('#heroBrace .bead',{y:-36,opacity:0,stagger:.04,duration:.9,ease:'bounce.out',delay:1});
 
-    // 02 counters + pipeline
     $$('[data-count]').forEach(function(el){
       var target=+el.getAttribute('data-count'),o={v:0};el.textContent='0';
       ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:function(){gsap.to(o,{v:target,duration:1.6,ease:'power2.out',onUpdate:function(){el.textContent=Math.round(o.v);}});}});
@@ -1248,7 +1209,6 @@ if(hasG){
       lis.forEach(function(li,i){li.classList.toggle('on',p>=i/(lis.length-1)-.02);});
     }});
 
-    // 03 horizontal timeline
     var eras=$$('.era');
     eras.forEach(function(e){e.classList.remove('on');});
     if(c.desktop){
@@ -1275,7 +1235,6 @@ if(hasG){
     gsap.from($$('#lineChart [data-draw]'),{strokeDashoffset:1,ease:'none',stagger:.15,scrollTrigger:{trigger:'#lineChart',start:'top 75%',end:'bottom 55%',scrub:true}});
     gsap.from($$('#heat .hc'),{opacity:0,scale:.5,duration:.5,stagger:{each:.01},scrollTrigger:{trigger:'#heat',start:'top 82%',once:true}});
 
-    // 04 scene
     if(c.desktop){
       var tl=gsap.timeline({scrollTrigger:{trigger:'#scene4',start:'top top',end:'+=220%',pin:true,scrub:.6,anticipatePin:1}});
       var caps=$$('#sceneCap span');
@@ -1312,27 +1271,23 @@ if(hasG){
       });
     })();
 
-    // 05 bars
     ['#vb5a','#vb5b'].forEach(function(sel){
       gsap.from(sel+' rect.bar',{scaleY:0,duration:1.1,stagger:.08,ease:'power3.out',scrollTrigger:{trigger:sel,start:'top 78%',once:true}});
     });
     gsap.from('#lyrCorr .fb i',{scaleX:0,duration:.9,stagger:.1,ease:'power3.out',scrollTrigger:{trigger:'#lyrCorr',start:'top 85%',once:true}});
 
-    // 06 album test
     gsap.from('#maeAlb .mb',{scaleX:0,duration:1,stagger:.05,ease:'power3.out',scrollTrigger:{trigger:'#maeAlb',start:'top 80%',once:true}});
     $$('#dumbAlb .rowdumb').forEach(function(d,i){
       d.set(0);var o={t:0};
       ScrollTrigger.create({trigger:d,start:'top 92%',once:true,onEnter:function(){gsap.to(o,{t:1,duration:1.4,delay:i*.04,ease:'power3.inOut',onUpdate:function(){d.set(o.t);}});}});
     });
 
-    // 08 ending
     var words=$$('#endWords .w'),endPath=$('#endPath');
     var etl=gsap.timeline({scrollTrigger:{trigger:'#endIntro',start:'top top',end:'+=130%',pin:true,scrub:.6,anticipatePin:1}});
     etl.from(endPath,{strokeDashoffset:1,ease:'none',duration:2},0)
        .from(words,{opacity:.08,y:30,stagger:.5,duration:.6},.2);
     ScrollTrigger.create({trigger:'#finalBrace',start:'top 88%',once:true,onEnter:function(){gsap.from('#finalBrace .bead',{y:-50,opacity:0,stagger:.06,duration:1,ease:'bounce.out'});}});
 
-    // reveals + labels last, so their positions account for every pin above them
     ScrollTrigger.batch('.rv',{refreshPriority:-1,start:'top 90%',once:true,onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.9,stagger:.08,ease:'power3.out',overwrite:true});}});
     labels();
 

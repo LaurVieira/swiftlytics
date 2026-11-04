@@ -6,7 +6,6 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import GroupKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-
 from features_texto import normalizar
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -19,14 +18,12 @@ TEXT = ["n_words", "lexical_diversity", "repeated_lines",
         "vader_pos", "vader_neg", "vader_compound"]
 ALVO = "valence"
 
-
 def avaliar(nome, modelo, X, y, grupos):
     cv = GroupKFold(n_splits=5)
     r2 = cross_val_score(modelo, X, y, cv=cv, groups=grupos, scoring="r2")
     mae = -cross_val_score(modelo, X, y, cv=cv, groups=grupos,
                            scoring="neg_mean_absolute_error")
     print(f"{nome:18s} R² = {r2.mean():.2f} (±{r2.std():.2f}) | erro médio = {mae.mean():.3f}")
-
 
 if __name__ == "__main__":
     musicas = pd.read_csv(MUSICAS)

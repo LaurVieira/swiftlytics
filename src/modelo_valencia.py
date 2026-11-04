@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -14,7 +13,6 @@ DADOS = RAIZ / "data" / "processed" / "songs_clean.csv"
 FEATURES = ["danceability", "energy", "loudness", "speechiness",
             "acousticness", "liveness", "tempo", "duration_ms", "mode"]
 ALVO = "valence"
-
 
 if __name__ == "__main__":
     df = pd.read_csv(DADOS)

@@ -1,2 +1,3 @@
 .venv/
 data/raw/taylor_swift_lyrics.csv
+__pycache__/

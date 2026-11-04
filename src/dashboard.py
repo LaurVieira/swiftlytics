@@ -17,7 +17,6 @@ ORDEM = ["Taylor Swift", "Fearless (Taylor's Version)", "Speak Now",
          "Red (Taylor's Version)", "1989", "reputation", "Lover",
          "folklore", "evermore", "Midnights"]
 
-
 @st.cache_data
 def carregar() -> pd.DataFrame:
     df = pd.read_csv(DADOS)

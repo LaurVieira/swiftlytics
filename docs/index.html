@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SWIFTLYTICS — The Science Behind Music</title>
+<meta name="description" content="Can audio predict how a song feels? A scrollytelling data science study of Taylor Swift's studio albums: valence from audio features, and whether lyrics add anything.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SWIFTLYTICS — The Science Behind Music">
+<meta property="og:description" content="Can we predict how a song feels? Audio features, lyrics and a whole-album test.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0B0B0F;--bg-rgb:11,11,15;--ink:#FFFFFF;--mute:#A1A1AA;--lilac:#A78BFA;--purple:#8B5CF6;
+  --line:rgba(255,255,255,.14);--faint:rgba(255,255,255,.07);
+  --pos-rgb:167,139,250;--neg-rgb:161,161,170;
+  --display:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --text:'Inter',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  color-scheme:dark;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#F7F6FB;--bg-rgb:247,246,251;--ink:#0B0B0F;--mute:#5B5B66;--lilac:#7C3AED;--purple:#6D28D9;
+    --line:rgba(11,11,15,.16);--faint:rgba(11,11,15,.07);--pos-rgb:124,58,237;--neg-rgb:91,91,102;color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F7F6FB;--bg-rgb:247,246,251;--ink:#0B0B0F;--mute:#5B5B66;--lilac:#7C3AED;--purple:#6D28D9;
+  --line:rgba(11,11,15,.16);--faint:rgba(11,11,15,.07);--pos-rgb:124,58,237;--neg-rgb:91,91,102;color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0B0B0F;--bg-rgb:11,11,15;--ink:#FFFFFF;--mute:#A1A1AA;--lilac:#A78BFA;--purple:#8B5CF6;
+  --line:rgba(255,255,255,.14);--faint:rgba(255,255,255,.07);--pos-rgb:167,139,250;--neg-rgb:161,161,170;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:clip}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+a{color:var(--lilac)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;color:var(--lilac)}
+button{font-family:inherit}
+
+/* HUD */
+.hud{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;pointer-events:none}
+.hud button,.hud a{pointer-events:auto}
+.hud-bar{height:2px;background:var(--faint)}
+.hud-bar i{display:block;height:100%;background:var(--era,var(--lilac));transform-origin:0 50%;transform:scaleX(0);transition:background .6s}
+.hud-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px clamp(14px,3vw,32px);font:500 .66rem var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink)}
+.vinyl{width:26px;height:26px;flex:none;will-change:transform}
+.hud-mid{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-r{display:flex;align-items:center;gap:10px}
+.hbtn{background:none;border:1px solid var(--line);color:var(--mute);border-radius:99px;font:500 .62rem var(--text);letter-spacing:.16em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:all .25s}
+.hbtn:hover,.hbtn[aria-expanded="true"]{color:var(--ink);border-color:var(--era,var(--lilac))}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.lang button{background:none;border:0;color:var(--mute);font:500 .62rem var(--text);letter-spacing:.14em;padding:6px 10px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.hud button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+@media (max-width:640px){.hud-mid{display:none}.hud-row{justify-content:space-between}}
+
+/* tracklist overlay */
+.tracklist{position:fixed;inset:0;z-index:70;background:rgba(var(--bg-rgb),.97);display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 70px) clamp(24px,8vw,120px) 40px;overflow:auto}
+.tracklist[hidden]{display:none}
+.tracklist .tl-h{font:500 .68rem var(--text);letter-spacing:.3em;text-transform:uppercase;color:var(--mute);margin-bottom:18px}
+.tracklist ol{list-style:none;max-width:780px}
+.tracklist li button{background:none;border:0;border-bottom:1px solid var(--faint);color:var(--ink);cursor:pointer;display:flex;gap:22px;align-items:baseline;width:100%;padding:12px 0;text-align:left;font-family:var(--display);font-weight:500;font-size:clamp(1.25rem,3vw,2rem);letter-spacing:-.01em;transition:padding .25s,color .25s}
+.tracklist li button:hover,.tracklist li button:focus-visible{padding-left:14px}
+.tracklist li i{font:500 .8rem var(--text);font-style:normal;letter-spacing:.14em;min-width:2.2em}
+.tl-close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:clamp(14px,3vw,32px);background:none;border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.tracklist button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+
+/* type & layout */
+.chapter{position:relative}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(88px,14vh,160px) clamp(20px,5vw,56px) clamp(32px,6vh,64px)}
+.wrap.tight{padding-top:clamp(24px,5vh,56px)}
+.kicker{font:500 .72rem var(--text);letter-spacing:.26em;text-transform:uppercase;color:var(--lilac);margin-bottom:18px}
+.h-xl{font-family:var(--display);font-weight:700;font-size:clamp(2.1rem,6.2vw,5.4rem);line-height:.98;letter-spacing:-.025em;text-transform:uppercase}
+.h-md{font-family:var(--display);font-weight:500;font-size:clamp(1.3rem,2.4vw,1.9rem);line-height:1.15;letter-spacing:-.01em;margin-bottom:12px}
+.lede{max-width:62ch;color:var(--mute);font-size:clamp(1rem,1.35vw,1.15rem);margin-top:22px}
+.lede strong,.note strong{color:var(--ink);font-weight:500}
+.note{max-width:70ch;font-size:.84rem;color:var(--mute);margin-top:14px}
+.badge{display:inline-block;border:1px dashed var(--lilac);color:var(--lilac);font:500 .66rem var(--text);letter-spacing:.18em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-right:8px}
+.js-motion .rv{opacity:0;transform:translateY(26px)}
+.block{margin-top:clamp(56px,10vh,110px)}
+.sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+
+/* ch1 hero */
+.hero{height:100svh;min-height:600px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 20px}
+.hero-inner{position:relative;z-index:2}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.5rem,11.5vw,10.5rem);letter-spacing:-.035em;line-height:.95}
+.hero .tag{font:500 clamp(.7rem,1.3vw,.95rem) var(--text);letter-spacing:.42em;color:var(--mute);margin-top:18px}
+.hero-q{font-family:var(--display);font-weight:500;font-size:clamp(1.7rem,5vw,4.3rem);line-height:1.04;letter-spacing:-.02em;margin-top:28px}
+.hero-q em{font-style:normal;color:var(--lilac)}
+.js-motion .hero-title,.js-motion .hero-q{position:absolute;left:50%;top:50%;width:min(94vw,1100px);transform:translate(-50%,-50%);margin:0}
+.js-motion .hero-inner{position:absolute;inset:0 0 38% 0}
+.js-motion .hero-q{opacity:0}
+.wave{position:absolute;left:0;right:0;bottom:7%;width:100%;height:40%;z-index:1;overflow:visible}
+.wave path{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+#w1{stroke:var(--lilac);stroke-width:3}
+#w2{stroke:var(--purple);stroke-width:1.6;opacity:.6}
+#w3{stroke:var(--ink);stroke-width:1;opacity:.2}
+#wdots{opacity:0}
+#wdots path{stroke-width:11}
+.wave-cap{position:absolute;left:0;right:0;bottom:2.6%;z-index:2;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding:0 20px}
+.js-motion .wave-cap{opacity:0}
+.scroll-cue{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:10px;font:500 .66rem var(--text);letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.scroll-cue i{display:block;width:1px;height:38px;background:linear-gradient(var(--lilac),transparent);animation:cue 2s ease-in-out infinite;transform-origin:top}
+@keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+.particles{position:absolute;inset:0;pointer-events:none}
+.particles b{position:absolute;display:block;width:10px;height:10px;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);animation:twinkle ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:translateY(0) scale(.4);opacity:.1}50%{transform:translateY(-40px) scale(1);opacity:.75}}
+
+/* bracelets */
+.brace{display:block;height:auto;max-width:100%;overflow:visible}
+.brace .str{fill:none;stroke:var(--mute);stroke-width:1.6;stroke-linecap:round;opacity:.7}
+.bead{transform-box:fill-box;transform-origin:50% 50%;transition:opacity .5s,transform .7s cubic-bezier(.3,1.7,.5,1);cursor:default}
+.nt .bead{transition:none}
+.bob{transform-box:fill-box;transform-origin:50% 50%}
+.bead text{font:700 13px var(--display);text-anchor:middle;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+  .bob{animation:bob 3.4s ease-in-out infinite;animation-delay:calc(var(--k,0)*-.24s)}
+  .brace .bead:hover .bob{animation:none;transform:scale(1.32) rotate(-6deg);transition:transform .25s cubic-bezier(.3,1.7,.5,1)}
+}
+.js-motion .era:not(.on) .bead{opacity:0;transform:translateY(-16px)}
+.hero .brace{width:min(86vw,540px);margin:26px auto 0}
+.era .brace{width:min(100%,400px);margin:20px 0 0}
+.final .brace{width:min(100%,620px);margin:0 auto 44px}
+.maker-out .brace{width:min(100%,620px);margin:26px auto 0}
+
+/* ch2 */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-top:56px}
+.stat{border-top:1px solid var(--line);padding-top:16px}
+.stat b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1;letter-spacing:-.03em}
+.stat span{display:block;margin-top:10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.pipe{position:relative;margin-top:84px}
+.pipe ol{list-style:none}
+.pipe li{position:relative;opacity:.38;transition:opacity .5s}
+.pipe li.on{opacity:1}
+.pipe li::before{content:"";position:absolute;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);background:var(--bg);transition:all .4s}
+.pipe li.on::before{border-color:var(--lilac);background:var(--lilac);box-shadow:0 0 0 7px rgba(var(--pos-rgb),.16)}
+.pipe h4{font-family:var(--display);font-weight:500;font-size:1.05rem;margin-bottom:6px}
+.pipe p{font-size:.84rem;color:var(--mute);line-height:1.5}
+.pipe .n{display:block;font:500 .7rem var(--text);letter-spacing:.14em;color:var(--lilac);margin-bottom:6px}
+.pl-line{position:absolute;background:var(--line)}
+.pl-line i{position:absolute;inset:0;background:var(--lilac)}
+@media (min-width:900px){
+  .pipe ol{display:grid;grid-template-columns:repeat(5,1fr);gap:26px;padding-top:40px}
+  .pipe li::before{top:-40px;left:0}
+  .pl-line{left:0;right:0;top:9px;height:2px}
+  .pl-line i{transform-origin:0 50%;transform:scaleX(var(--p,1))}
+}
+@media (max-width:899px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .pipe ol{display:grid;gap:30px;padding-left:44px}
+  .pipe li::before{top:2px;left:-44px}
+  .pl-line{left:9px;top:12px;bottom:12px;width:2px}
+  .pl-line i{transform-origin:50% 0;transform:scaleY(var(--p,1))}
+}
+
+/* ch3 */
+.hscroll{position:relative;height:100svh;min-height:560px;display:flex;align-items:center;overflow:hidden}
+.hscroll::before{content:"";position:absolute;inset:0;background:radial-gradient(55% 62% at 50% 55%,rgba(var(--era-rgb,167,139,250),.15),transparent 72%);transition:opacity .6s;pointer-events:none}
+.htrack{position:relative;display:flex;gap:6vw;padding:0 8vw;width:max-content;align-items:stretch}
+.era{flex:0 0 min(78vw,500px);border-left:2px solid var(--ec,var(--line));padding:0 0 0 28px;display:flex;flex-direction:column;justify-content:center}
+.era-n{font-family:var(--display);font-weight:700;font-size:clamp(3rem,7vw,5.5rem);line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--ec,var(--line));letter-spacing:-.03em}
+.era h3{font-family:var(--display);font-weight:500;font-size:clamp(1.4rem,2.6vw,2.1rem);line-height:1.1;margin:10px 0 18px;letter-spacing:-.015em}
+.tv-tag{display:inline-block;font:500 .64rem var(--text);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:-8px 0 14px}
+.meter{display:grid;grid-template-columns:96px 1fr 44px;gap:12px;align-items:center;margin:13px 0;font-size:.8rem;color:var(--mute)}
+.meter .tr{height:6px;background:var(--faint);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;width:calc(var(--w)*100%);background:var(--lilac);border-radius:3px;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+.meter.m-e i{background:var(--ink)}
+.meter.m-a i{background:var(--purple)}
+.meter b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.js-motion .era:not(.on) .meter i{width:0}
+.era-note{margin-top:16px;font-size:.84rem;color:var(--mute);max-width:36ch;min-height:3em}
+.hl-tag{display:inline-block;border:1px solid var(--lilac);color:var(--lilac);font:500 .64rem var(--text);letter-spacing:.18em;text-transform:uppercase;padding:4px 11px;border-radius:99px;margin-bottom:10px}
+.hprog{position:absolute;left:8vw;right:8vw;bottom:calc(env(safe-area-inset-bottom,0px) + 6vh);height:2px;background:var(--line)}
+.hprog i{display:block;height:100%;background:var(--era,var(--lilac));transform-origin:0 50%;transform:scaleX(0)}
+.hhint{position:absolute;left:8vw;top:calc(env(safe-area-inset-top,0px) + 56px);font:500 .68rem var(--text);letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+html:not(.js-motion) .hscroll{height:auto;min-height:0;overflow-x:auto;padding:40px 0;scroll-snap-type:x proximity}
+html:not(.js-motion) .era{scroll-snap-align:start}
+@media (max-width:899px){
+  .hscroll{height:auto;min-height:0;display:block;padding:20px 0}
+  .hscroll::before{display:none}
+  .htrack{flex-direction:column;width:auto;padding:0 clamp(20px,5vw,56px);gap:44px}
+  .era{flex:none;width:100%;padding:6px 0 6px 22px;background:linear-gradient(90deg,rgba(var(--ec-rgb,167,139,250),.08),transparent 70%)}
+  .hprog,.hhint{display:none}
+}
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-scroll svg{display:block;width:100%;min-width:620px;height:auto}
+svg .grid{stroke:var(--faint);stroke-width:1}
+svg .ax{fill:var(--mute);font:400 12px var(--text)}
+svg .axb{fill:var(--mute);font:400 13px var(--text)}
+svg .ttl{fill:var(--mute);font:500 11px var(--text);letter-spacing:.14em;text-transform:uppercase}
+svg .ser{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+svg .band{fill:rgba(var(--pos-rgb),.09)}
+svg .bandt{fill:var(--lilac);font:500 11px var(--text);letter-spacing:.14em;text-transform:uppercase}
+svg .diag{stroke:var(--mute);stroke-width:1.2;stroke-dasharray:5 5}
+svg .pt{fill:var(--ptc,var(--lilac));stroke:var(--bg);stroke-width:2;cursor:pointer;transition:opacity .25s}
+svg .pt.dim{opacity:.18}
+svg .pt:focus{outline:none;stroke:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin:0 0 16px;font-size:.78rem;color:var(--mute)}
+.legend span::before{content:"";display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:8px;vertical-align:middle;background:var(--c)}
+.legend.sq span::before{height:10px;width:10px;border-radius:2px}
+.heat{display:grid;grid-template-columns:76px repeat(9,minmax(0,1fr));gap:3px;max-width:760px;margin-top:20px}
+.heat .hh{font:500 .6rem var(--text);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;text-align:center}
+.heat .hl{font:500 .62rem var(--text);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center}
+.heat .hc{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:400 .62rem var(--text);color:var(--ink);border-radius:2px;font-variant-numeric:tabular-nums}
+.heat .hc.key{outline:2px solid var(--lilac);outline-offset:1px}
+@media (max-width:560px){.heat .hc{font-size:0}.heat .hc.key{font-size:.6rem}.heat{grid-template-columns:58px repeat(9,minmax(0,1fr))}}
+.findings{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:56px}
+.findings div{border-top:1px solid var(--line);padding-top:16px}
+.findings b{display:block;font-family:var(--display);font-weight:500;font-size:1.05rem;margin-bottom:8px}
+.findings b i{font-style:normal;color:var(--lilac);margin-right:10px}
+.findings p{font-size:.88rem;color:var(--mute)}
+@media (max-width:899px){.findings{grid-template-columns:1fr}}
+
+/* ch4 */
+.spec{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:44px}
+.spec div{border-top:1px solid var(--line);padding-top:14px;font-size:.85rem;color:var(--mute)}
+.spec b{display:block;font:500 .66rem var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--lilac);margin-bottom:6px}
+@media (max-width:899px){.spec{grid-template-columns:repeat(2,1fr)}}
+.scene{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:96px clamp(20px,5vw,56px) 60px}
+.scene-grid{display:grid;grid-template-columns:1.25fr .3fr 1fr;gap:28px;align-items:center;width:100%;max-width:1180px}
+.feat-h,.gauge-h{font:500 .66rem var(--text);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:14px}
+.feat-row{display:grid;grid-template-columns:104px 1fr 54px;gap:10px;align-items:center;margin:10px 0;font-size:.8rem;color:var(--mute)}
+.feat-row b{font-weight:500;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.fb{position:relative;height:8px;background:var(--faint);border-radius:4px}
+.fb::after{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--line)}
+.fb i{position:absolute;top:0;bottom:0;border-radius:4px}
+.fb .pos{background:var(--lilac);transform-origin:0 50%}
+.fb .neg{background:var(--mute);transform-origin:100% 50%}
+.mid{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--mute);font:500 .66rem var(--text);letter-spacing:.2em;text-transform:uppercase}
+.mid svg{width:56px;height:24px;stroke:var(--lilac);fill:none;stroke-width:2}
+.gauge-wrap{padding:0 6px}
+.gauge{position:relative;height:6px;background:var(--faint);border-radius:3px;margin:78px 0 70px}
+.gauge .tk{position:absolute;top:12px;font-size:.7rem;color:var(--mute);transform:translateX(-50%)}
+.mk{position:absolute;top:50%;transform:translate(-50%,-50%)}
+.mk::before{content:"";display:block;width:18px;height:18px;border-radius:50%}
+.mk span{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;font:500 .74rem var(--text);letter-spacing:.06em}
+#mkPred::before{background:var(--lilac)}
+#mkPred span{bottom:30px;color:var(--lilac)}
+#mkAct::before{border:2px solid var(--ink);background:var(--bg)}
+#mkAct span{top:30px;color:var(--ink)}
+.gauge-song{font-family:var(--display);font-size:1.25rem;font-weight:500}
+.gauge-sub{font-size:.78rem;color:var(--mute);margin-top:2px}
+.scene-cap{margin-top:36px;text-align:center;width:min(62ch,100%);font-size:.95rem;color:var(--mute);display:grid;gap:6px}
+.js-motion .scene-cap{position:relative;display:block;height:5em}
+.js-motion .scene-cap span{position:absolute;left:0;right:0;opacity:0}
+.scene-fn{margin-top:18px;font-size:.78rem;color:var(--mute);text-align:center;max-width:70ch}
+@media (max-width:899px){
+  .scene{min-height:0}
+  .scene-grid{grid-template-columns:1fr;gap:32px}
+  .mid svg{transform:rotate(90deg);margin:10px 0}
+}
+.rb{display:grid;grid-template-columns:minmax(120px,230px) 1fr minmax(96px,150px);gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--faint)}
+.rb-l b{display:block;font-weight:500;font-size:.9rem}
+.rb-l small{display:block;color:var(--mute);font-size:.74rem;line-height:1.35}
+.rb-t{height:10px;background:var(--faint);border-radius:5px;overflow:hidden}
+.rb-t i{display:block;height:100%;background:var(--mute);border-radius:5px;transform-origin:0 50%}
+.rb.hl .rb-t i{background:var(--lilac)}
+.rb.hl .rb-l b{color:var(--lilac)}
+.rb-v{font-variant-numeric:tabular-nums;font-size:.9rem;text-align:right}
+.rb-v small{display:block;color:var(--mute);font-size:.72rem}
+@media (max-width:640px){.rb{grid-template-columns:1fr;gap:6px}.rb-v{text-align:left}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:start}
+.two.w{grid-template-columns:1.5fr 1fr}
+@media (max-width:899px){.two,.two.w{grid-template-columns:1fr}}
+.callout{border-left:2px solid var(--lilac);padding:4px 0 4px 18px;margin-top:28px;max-width:62ch;font-size:.92rem;color:var(--mute)}
+.callout strong{color:var(--ink);font-weight:500}
+
+/* ch5 */
+.techs{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:44px}
+.techs div{border-top:1px solid var(--line);padding-top:14px}
+.techs b{display:block;font-family:var(--display);font-weight:500;font-size:1.05rem;margin-bottom:6px}
+.techs p{font-size:.86rem;color:var(--mute)}
+@media (max-width:899px){.techs{grid-template-columns:1fr}}
+.corr{display:grid;grid-template-columns:150px 1fr 44px;gap:10px;align-items:center;margin:9px 0;font-size:.8rem;color:var(--mute)}
+.corr b{font-weight:500;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+
+/* ch6 */
+.big{display:flex;flex-wrap:wrap;gap:20px 56px;margin-top:40px;align-items:flex-end}
+.big div b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(2.6rem,6vw,5rem);line-height:1;letter-spacing:-.03em}
+.big div b em{font-style:normal;color:var(--lilac)}
+.big div span{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.arow{display:grid;grid-template-columns:140px 1fr 150px;gap:16px;align-items:center;padding:9px 0;border-bottom:1px solid var(--faint);font-size:.84rem}
+.arow.hl .al{color:var(--lilac)}
+.al{font-weight:500}
+.av{font-variant-numeric:tabular-nums;font-size:.8rem;color:var(--mute);text-align:right}
+.av b{color:var(--ink);font-weight:500}
+.mb{height:6px;border-radius:3px;margin:3px 0;transform-origin:0 50%}
+.mb.base{background:var(--mute);opacity:.6}
+.mb.model{background:var(--lilac)}
+.db{position:relative;height:28px}
+.db .axl{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.db .ln{position:absolute;top:50%;height:3px;margin-top:-1.5px;background:rgba(var(--pos-rgb),.6);border-radius:2px}
+.db .dr,.db .dp{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%}
+.db .dr{border:2px solid var(--ink);background:var(--bg)}
+.db .dp{background:var(--lilac)}
+.dscale{display:grid;grid-template-columns:140px 1fr 150px;gap:16px;font-size:.68rem;color:var(--mute);letter-spacing:.06em;margin-bottom:4px}
+.dscale div{display:flex;justify-content:space-between}
+@media (max-width:640px){.arow,.dscale{grid-template-columns:90px 1fr}.arow .av{grid-column:1/-1;text-align:left}.dscale>:last-child{display:none}}
+
+/* ch7 */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
+.chip{border:1px solid var(--line);background:none;color:var(--mute);padding:8px 14px;border-radius:99px;font:500 .8rem var(--text);cursor:pointer;transition:all .25s}
+.chip::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ec,var(--lilac));margin-right:8px}
+.chip.plain::before{display:none}
+.chip:hover{color:var(--ink);border-color:var(--mute)}
+.chip[aria-pressed="true"]{border-color:var(--ec,var(--lilac));color:var(--ink);background:var(--faint)}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 24px;margin-top:8px}
+.metrics div{border-top:1px solid var(--ec,var(--line));padding-top:10px}
+.metrics dt{font:500 .64rem var(--text);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.metrics dd{font-family:var(--display);font-size:1.6rem;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.metrics dd small{font-size:.74rem;color:var(--mute);font-family:var(--text);font-weight:400;margin-left:6px}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin:26px 0 8px}
+.ctrl input[type=search],.ctrl input[type=text]{background:var(--faint);border:1px solid var(--line);border-radius:99px;color:var(--ink);padding:9px 16px;font:400 .85rem var(--text);min-width:220px;letter-spacing:.04em}
+.ctrl input:focus-visible,.chip:focus-visible,a:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+.ctrl label{font-size:.82rem;color:var(--mute);display:flex;gap:8px;align-items:center;cursor:pointer}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{text-align:left;font:500 .64rem var(--text);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 10px 9px 0;border-bottom:1px solid var(--faint);font-variant-numeric:tabular-nums}
+.tbl td.over{color:var(--lilac)}
+.tbl th:nth-child(n+3),.tbl td:nth-child(n+3){text-align:right}
+.holder{border:1px dashed var(--line);padding:26px;color:var(--mute);font-size:.9rem;border-radius:4px}
+.tip{position:fixed;left:0;top:0;z-index:80;background:var(--bg);color:var(--ink);border:1px solid var(--lilac);border-radius:4px;padding:8px 12px;font-size:.78rem;line-height:1.4;pointer-events:none;opacity:0;transition:opacity .15s;max-width:240px}
+.tip.on{opacity:1}
+
+/* ch8 */
+.endintro{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 clamp(20px,5vw,56px);overflow:hidden}
+.endintro h2{position:relative;z-index:2;font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,8vw,7.4rem);line-height:.98;letter-spacing:-.03em;text-transform:uppercase;max-width:14ch}
+.endintro h2 .w{display:inline-block;margin-right:.22em}
+.endline{position:absolute;left:0;right:0;bottom:12%;width:100%;height:36%;z-index:1;opacity:.9}
+.endline path{fill:none;stroke-width:3;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.cols{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(28px,5vw,64px);margin-top:48px}
+@media (max-width:899px){.cols{grid-template-columns:1fr}}
+.cols h3{font:500 .68rem var(--text);letter-spacing:.22em;text-transform:uppercase;color:var(--lilac);margin-bottom:14px}
+.cols ul{list-style:none}
+.cols li{padding:10px 0;border-top:1px solid var(--faint);font-size:.9rem;color:var(--mute)}
+.cols li strong{color:var(--ink);font-weight:500}
+.maker{text-align:center}
+.maker .h-md{margin-top:6px}
+.maker .note{margin-left:auto;margin-right:auto}
+.maker .ctrl{justify-content:center}
+.center{text-align:center}
+.center .lede,.center .note{margin-left:auto;margin-right:auto}
+.scat-wrap{max-width:560px;margin:34px auto 0}
+#scat4,#exScatter{min-width:0;max-width:540px;margin:0 auto}
+svg .stem{stroke:var(--ptc,var(--lilac));stroke-opacity:.5;stroke-width:2;stroke-linecap:round;transition:opacity .25s}
+svg .stem.dim{opacity:.15}
+.final{text-align:center;padding:clamp(80px,16vh,180px) 20px clamp(80px,14vh,140px)}
+.final q{display:block;font-family:var(--display);font-weight:500;font-size:clamp(1.5rem,3.6vw,3rem);line-height:1.15;letter-spacing:-.02em;max-width:22ch;margin:0 auto;quotes:none}
+.final .by{margin-top:36px;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.final .by a{color:var(--ink)}
+.proto{border-top:1px solid var(--faint);padding:28px clamp(20px,5vw,56px) 56px;max-width:1180px;margin:0 auto;font-size:.78rem;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){.particles b,.scroll-cue i{animation:none}.meter i,.bead{transition:none}.tracklist li button{transition:none}}
+</style>
+</head>
+<body>
+<div class="hud">
+  <div class="hud-bar" aria-hidden="true"><i id="bar"></i></div>
+  <div class="hud-row">
+    <span class="brand"><svg class="vinyl" id="vinyl" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#111" stroke="rgba(255,255,255,.25)"/><circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,.14)"/><circle cx="20" cy="20" r="12" fill="none" stroke="rgba(255,255,255,.1)"/><circle cx="20" cy="20" r="9" fill="none" stroke="rgba(255,255,255,.14)"/><circle cx="20" cy="20" r="6" style="fill:var(--era,var(--lilac))"/><circle cx="20" cy="14.6" r="1.1" fill="rgba(255,255,255,.7)"/><circle cx="20" cy="20" r="1.5" fill="#111"/></svg>Swiftlytics</span>
+    <span class="hud-mid" id="chapterLabel" aria-hidden="true">01</span>
+    <span class="hud-r"><button class="hbtn" id="tlBtn" type="button" aria-expanded="false" aria-controls="tracklist" data-i="tlbtn">Tracklist</button><span class="lang" role="group" aria-label="Language"><button type="button" id="langEn" aria-pressed="true">EN</button><button type="button" id="langPt" aria-pressed="false">PT</button></span></span>
+  </div>
+</div>
+<div class="tracklist" id="tracklist" role="dialog" aria-modal="true" hidden>
+  <button class="tl-close" id="tlClose" type="button" aria-label="Close">×</button>
+  <p class="tl-h" data-i="tlh">Tracklist</p>
+  <ol id="tlList"></ol>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<main>
+<!-- 01 -->
+<section id="c1" class="chapter hero" aria-label="Chapter 1">
+  <div class="particles" id="particles" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <div class="hero-title" id="heroTitle"><h1>SWIFTLYTICS</h1><p class="tag" data-i="htag">THE SCIENCE BEHIND MUSIC.</p><div id="heroBrace"></div></div>
+    <h2 class="hero-q" id="heroQ" data-i="hq">CAN WE PREDICT<br><em>HOW A SONG FEELS?</em></h2>
+  </div>
+  <svg class="wave" id="wave" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+    <path id="w3"/><path id="w2"/><path id="w1"/><g id="wdots"></g>
+  </svg>
+  <p class="wave-cap" id="waveCap" data-i="hcap">Average valence per album, in era order — the sound wave becomes data.</p>
+  <div class="scroll-cue" id="cue"><span data-i="cue">Scroll</span><i></i></div>
+</section>
+
+<!-- 02 -->
+<section id="c2" class="chapter">
+  <div class="wrap">
+    <p class="kicker rv" data-i="k2">Chapter 02</p>
+    <h2 class="h-xl rv" data-i="t2">Behind the<br>data.</h2>
+    <p class="lede rv" data-i="l2">Two public sources, one question. The numbers on this page come from the outputs of the project’s own scripts. <strong>Valence</strong> is Spotify’s 0–1 score for how positive a track sounds — the target here. Popularity is <strong>not</strong> part of this study.</p>
+    <div class="stats">
+      <div class="stat rv"><b data-count="191">191</b><span data-i="s1">songs after cleaning</span></div>
+      <div class="stat rv"><b data-count="29">29</b><span data-i="s2">original columns</span></div>
+      <div class="stat rv"><b data-count="130">130</b><span data-i="s3">songs with lyrics</span></div>
+      <div class="stat rv"><b data-count="8">8</b><span data-i="s4">albums with lyrics</span></div>
+      <div class="stat rv"><b data-count="2">2</b><span data-i="s5">data sources</span></div>
+    </div>
+    <div class="pipe" id="pipe">
+      <div class="pl-line" aria-hidden="true"><i id="plFill"></i></div>
+      <ol>
+        <li class="on"><span class="n">01</span><h4 data-i="pl1h">Main dataset</h4><p data-i="pl1p">194 songs × 29 columns from the studio albums. The lyrics column arrived empty; there is no popularity column.</p></li>
+        <li class="on"><span class="n">02</span><h4 data-i="pl2h">Cleaning</h4><p data-i="pl2p">3 bonus tracks without audio features removed, empty column dropped: 191 songs × 28 columns.</p></li>
+        <li class="on"><span class="n">03</span><h4 data-i="pl3h">Lyrics join</h4><p data-i="pl3p">A second source, matched by title: 130 songs across 8 albums. It stops at <em>folklore</em>.</p></li>
+        <li class="on"><span class="n">04</span><h4 data-i="pl4h">Features</h4><p data-i="pl4p">9 audio features, plus text features (sentiment, vocabulary diversity, TF-IDF). Only derived numbers are stored.</p></li>
+        <li class="on"><span class="n">05</span><h4 data-i="pl5h">Modeling</h4><p data-i="pl5p">Ridge and Random Forest, validated with shuffled folds and with whole albums held out.</p></li>
+      </ol>
+    </div>
+    <p class="note rv" data-i="n2">Two sample sizes appear in this story: <strong>191 songs</strong> for the audio-only experiments, <strong>130 songs</strong> for anything involving lyrics. They are never mixed in a comparison.</p>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="c3" class="chapter">
+  <div class="wrap" style="padding-bottom:0">
+    <p class="kicker rv" data-i="k3">Chapter 03</p>
+    <h2 class="h-xl rv" data-i="t3">Every era has<br>its own sound.</h2>
+    <p class="lede rv" data-i="l3">Average valence, energy and acousticness for each album, in the order of the eras. Scroll sideways through ten albums.</p>
+  </div>
+  <div class="hscroll" id="hscroll"><p class="hhint" data-i="hhint">Scroll → ten eras</p><div class="htrack" id="htrack"></div><div class="hprog"><i id="hfill"></i></div></div>
+  <div class="wrap tight">
+    <div>
+      <h3 class="h-md rv" data-i="tl3">The shape of the eras</h3>
+      <div class="legend rv"><span style="--c:var(--lilac)" data-i="lg3v">valence</span><span style="--c:var(--ink)" data-i="lg3e">energy</span><span style="--c:var(--purple)" data-i="lg3a">acousticness</span></div>
+      <div class="chart-scroll rv"><svg id="lineChart" role="img"></svg></div>
+      <p class="note rv" data-i="n3">Taylor’s Version albums sit in the position of the original era; their audio comes from the re-recordings. Danceability is discussed in the findings but not plotted here — its exact per-album values are not bundled in this prototype.</p>
+    </div>
+    <div class="block">
+      <h3 class="h-md rv" data-i="tl3b">How the audio features relate</h3>
+      <p class="lede rv" style="margin-top:0" data-i="l3b">Pearson correlation across the 191 songs. The first row is valence — the feature we want to predict.</p>
+      <div class="heat" id="heat" role="img"></div>
+    </div>
+    <div class="findings">
+      <div class="rv"><b><i>1</i><span data-i="f1h">Acoustic turn</span></b><p data-i="f1p">Acousticness jumps to 0.72 in <em>folklore</em> and 0.79 in <em>evermore</em>; the other eight albums stay between 0.14 and 0.41.</p></div>
+      <div class="rv"><b><i>2</i><span data-i="f2h">Dark but danceable</span></b><p data-i="f2p"><em>reputation</em> (0.29) and <em>Midnights</em> (0.28) have the lowest valence, while danceability stays high (roughly 0.63–0.66, read from the chart).</p></div>
+      <div class="rv"><b><i>3</i><span data-i="f3h">Energy tracks mood</span></b><p data-i="f3p">Energy correlates with valence at r = 0.51. That is an association, not a cause — and energy overlaps heavily with loudness (r = 0.80).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 -->
+<section id="c4" class="chapter">
+  <div class="wrap" style="padding-bottom:0">
+    <p class="kicker rv" data-i="k4">Chapter 04</p>
+    <h2 class="h-xl rv" data-i="t4">Can we predict<br>how a song feels?</h2>
+    <p class="lede rv" data-i="l4">A regression problem: use what a song <em>sounds like</em> to estimate its valence, then check the estimate on songs the model has never seen.</p>
+    <div class="spec rv">
+      <div><b data-i="sp1b">Target</b><span data-i="sp1">valence, from 0 (negative) to 1 (positive)</span></div>
+      <div><b data-i="sp2b">Predictors</b><span data-i="sp2">9 audio features: danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duration, mode</span></div>
+      <div><b data-i="sp3b">Models</b><span data-i="sp3">Ridge (standardized features) and Random Forest (300 trees), against a “predict the mean” baseline</span></div>
+      <div><b data-i="sp4b">Validation</b><span data-i="sp4">5 shuffled folds — and the stricter test: whole albums held out</span></div>
+    </div>
+  </div>
+  <div class="scene" id="scene4">
+    <div class="scene-grid">
+      <div>
+        <p class="feat-h" data-i="fh">Ridge weights · standardized · fit on all 191 songs</p>
+        <div id="featList"></div>
+      </div>
+      <div class="mid"><svg viewBox="0 0 56 24" aria-hidden="true"><path d="M2 12h50M42 3l10 9-10 9"/></svg><span>Ridge</span></div>
+      <div class="gauge-wrap">
+        <p class="gauge-h" data-i="gh">Example · album held out of training</p>
+        <p class="gauge-song">Picture To Burn</p>
+        <p class="gauge-sub" data-i="gsub">from the album <em>Taylor Swift</em></p>
+        <div class="gauge" id="gauge">
+          <span class="tk" style="left:0%">0</span><span class="tk" style="left:50%">0.5</span><span class="tk" style="left:100%">1</span>
+          <div class="mk" id="mkPred" style="left:76%"><span data-i="mkp">predicted 0.76</span></div>
+          <div class="mk" id="mkAct" style="left:82%"><span data-i="mka">actual 0.82</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="scene-cap" id="sceneCap"><span data-i="sc1">A song becomes nine numbers describing how it sounds…</span><span data-i="sc2">…each weighted by the model, with energy and acousticness carrying the most weight…</span><span data-i="sc3">…and the result is read out as a predicted valence, to be compared with the real one.</span></p>
+    <p class="scene-fn" data-i="sfn">Energy, loudness and acousticness are strongly correlated with each other, so read the weights as a group, not one by one.</p>
+  </div>
+  <div class="wrap tight">
+    <h3 class="h-md rv" data-i="r2h">How good is the prediction?</h3>
+    <p class="lede rv" style="margin-top:0" data-i="r2l"><strong>R²</strong> is the share of the variation in valence that the model explains. It is <strong>not</strong> a percentage of correct predictions: 0 means no better than guessing the average, 1 would be perfect.</p>
+    <div class="block" style="margin-top:36px">
+      <p class="feat-h" data-i="r2f">R² — higher is better</p>
+      <div id="r2Rows"></div>
+      <p class="feat-h" style="margin-top:44px" data-i="maef">Mean absolute error, in valence points — lower is better</p>
+      <div id="maeRows"></div>
+      <p class="callout rv" data-i="co4"><strong>Holding out whole albums is the harder test</strong> because the model never hears a single song from the album it is predicting. R² drops from 0.40 to 0.33 — still above the baseline, but the shuffled-fold number was optimistic. Random Forest was only run with shuffled folds, so compare it with Ridge’s 0.40, not 0.33.</p>
+    </div>
+    <div class="block center">
+      <div>
+        <h3 class="h-md rv" data-i="avp">Actual vs predicted</h3>
+        <p class="lede rv" style="margin-top:0" data-i="avpl">Each dot is a song. A perfect model would sit on the dashed diagonal. The cloud, not the line, is what R² ≈ 0.3 looks like.</p>
+        <p class="note rv" data-i="avpn"><span class="badge">sample</span>10 of the 15 songs on <em>Taylor Swift</em>, with each album held out of training. The full per-song export is pending.</p>
+      </div>
+      <div class="chart-scroll rv scat-wrap"><svg id="scat4" role="img"></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="c5" class="chapter">
+  <div class="wrap">
+    <p class="kicker rv" data-i="k5">Chapter 05</p>
+    <h2 class="h-xl rv" data-i="t5">Do lyrics<br>add something?</h2>
+    <p class="lede rv" data-i="l5">The lyrics source covers <strong>130 songs from 8 albums</strong> (it stops at <em>folklore</em>, so <em>evermore</em> and <em>Midnights</em> are missing). All comparisons below use these same 130 songs, with whole albums held out. The lyrics themselves are never shown or stored in the repository — only numbers derived from them.</p>
+    <div class="techs">
+      <div class="rv"><b data-i="te1b">VADER sentiment</b><p data-i="te1">A rule-based score of how positive or negative the wording is. Built for short social-media text, so a rough fit for song lyrics.</p></div>
+      <div class="rv"><b data-i="te2b">Vocabulary diversity</b><p data-i="te2">Unique words divided by total words, plus word count and share of repeated lines.</p></div>
+      <div class="rv"><b data-i="te3b">TF-IDF</b><p data-i="te3">Up to 300 words that characterise each song against the others (kept only if used in 3+ songs), added to Ridge at three penalty strengths.</p></div>
+    </div>
+    <div class="block two w">
+      <div>
+        <h3 class="h-md rv" data-i="h5a">Audio alone vs audio + TF-IDF</h3>
+        <div class="legend sq rv"><span style="--c:var(--ink)" data-i="lgA">audio only</span><span style="--c:var(--lilac)" data-i="lgAT">audio + TF-IDF</span><span style="--c:var(--mute)" data-i="lgT">TF-IDF only</span></div>
+        <div class="chart-scroll rv"><svg id="vb5a" role="img"></svg></div>
+      </div>
+      <div>
+        <h3 class="h-md rv" data-i="h5b">Simple text features</h3>
+        <div class="legend sq rv"><span style="--c:var(--ink)" data-i="lgA2">audio only</span><span style="--c:var(--lilac)" data-i="lgAS">audio + simple text</span><span style="--c:var(--mute)" data-i="lgTx">text only</span></div>
+        <div class="chart-scroll rv"><svg id="vb5b" role="img"></svg></div>
+      </div>
+    </div>
+    <p class="callout rv" data-i="co5"><strong>No consistent gain from lyrics.</strong> Audio + TF-IDF roughly ties audio alone (0.23 vs 0.24, 0.22 vs 0.22) and is lower at the weakest penalty (0.15 vs 0.21); simple text features lower it (0.10 vs 0.21). Text on its own does no better than the mean baseline. With 8 albums the fold-to-fold spread is huge (up to ±0.46 for the simple features), so small gaps here are noise — the safe reading is that there is no evidence lyrics help.</p>
+    <div class="block">
+      <h3 class="h-md rv" data-i="h5c">How each text feature relates to valence</h3>
+      <p class="lede rv" style="margin-top:0" data-i="l5c">Correlation on the 130 songs — exploratory only.</p>
+      <div id="lyrCorr" style="max-width:640px;margin-top:20px"></div>
+      <p class="note rv" data-i="n5c">Negative-word share correlates <em>positively</em> with valence (0.24) and the overall sentiment score <em>negatively</em> (−0.21). That is the opposite of what the words alone would suggest, which is consistent with sad lyrics over upbeat sound — but it is a hypothesis, not a result of this study.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="c6" class="chapter">
+  <div class="wrap">
+    <p class="kicker rv" data-i="k6">Chapter 06</p>
+    <h2 class="h-xl rv" data-i="t6">Does the model understand<br>every era?</h2>
+    <p class="lede rv" data-i="l6">A generalisation test. Hold out one album, train on the other nine, predict the missing one — ten times. Audio features only, all 191 songs.</p>
+    <div class="big rv">
+      <div><b><em>9</em> / 10</b><span data-i="bg1">albums where the model beats the baseline</span></div>
+      <div><b>0<span class="dec">.</span>125</b><span data-i="bg2">model error (mean absolute)</span></div>
+      <div><b style="color:var(--mute)">0<span class="dec">.</span>157</b><span data-i="bg3">baseline error (predict the mean)</span></div>
+    </div>
+    <div class="block">
+      <h3 class="h-md rv" data-i="h6a">Error per album</h3>
+      <div class="legend rv"><span style="--c:var(--lilac)" data-i="lgM">model</span><span style="--c:var(--mute)" data-i="lgB">baseline</span></div>
+      <div id="maeAlb"></div>
+      <p class="note rv" data-i="n6a"><em>folklore</em> is the one tie (the model is 0.003 worse than the baseline). The biggest gains are on <em>Red</em>, <em>Fearless</em>, <em>Speak Now</em> and <em>1989</em>.</p>
+    </div>
+    <div class="block">
+      <h3 class="h-md rv" data-i="h6b">Real vs predicted valence, album average</h3>
+      <div class="legend rv"><span style="--c:var(--ink)" data-i="lgAc">actual</span><span style="--c:var(--lilac)" data-i="lgPr">predicted when the album is held out</span></div>
+      <div class="dscale"><span></span><div id="dsc"></div><span></span></div>
+      <div id="dumbAlb"></div>
+      <p class="callout rv" data-i="co6"><strong>The model over-estimates the mood of the two darkest albums.</strong> It predicts about 0.42 for <em>reputation</em> (actual 0.29) and 0.39 for <em>Midnights</em> (actual 0.28). A plausible reason is that high danceability reads as “happy” to an audio-only model — an explanation to test, not something this project has shown. Predictions are also compressed toward the middle: the model has trouble at the extremes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="c7" class="chapter">
+  <div class="wrap">
+    <p class="kicker rv" data-i="k7">Chapter 07</p>
+    <h2 class="h-xl rv" data-i="t7">Your turn<br>to explore.</h2>
+    <p class="lede rv" data-i="l7">Pick an album and see how the held-out model treated it.</p>
+    <div class="chips rv" id="exChips" role="group"></div>
+    <div class="two block" style="margin-top:44px">
+      <div>
+        <p class="feat-h" id="exName"></p>
+        <dl class="metrics" id="exMetrics"></dl>
+        <div style="margin-top:34px"><p class="feat-h" data-i="dbh">Actual ○ → predicted ●</p><div id="exDumb"></div></div>
+      </div>
+      <div>
+        <div id="exSample">
+          <p class="note" style="margin-top:0" data-i="n7s"><span class="badge">sample</span>10 of 15 songs on <em>Taylor Swift</em>. Hover or tap a dot for details.</p>
+          <div class="chart-scroll"><svg id="exScatter" role="img"></svg></div>
+        </div>
+        <div class="holder" id="exHolder" hidden><span class="badge" id="exBadge">placeholder</span><span id="exHolderTxt"></span></div>
+      </div>
+    </div>
+    <div id="exTableBox" class="block" style="margin-top:40px">
+      <div class="ctrl">
+        <input type="search" id="exQ">
+        <label><input type="checkbox" id="exErr"> <span data-i="lblerr">only errors ≥ 0.10</span></label>
+      </div>
+      <table class="tbl"><thead><tr><th data-i="th1">#</th><th data-i="th2">Song</th><th data-i="th3">Actual</th><th data-i="th4">Predicted</th><th data-i="th5">Error</th></tr></thead><tbody id="exTable"></tbody></table>
+      <p class="note" data-i="n7t">Error = predicted − actual. Positive means the model heard the song as happier than it is.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="c8" class="chapter">
+  <div class="endintro" id="endIntro">
+    <svg class="endline" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="eraGrad" x1="0" y1="0" x2="1" y2="0"></linearGradient></defs><path id="endPath" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:0;stroke:url(#eraGrad)"/></svg>
+    <h2 id="endWords">Music is more than numbers.</h2>
+  </div>
+  <div class="wrap tight">
+    <p class="kicker rv" data-i="kfound">What we found</p>
+    <div class="cols">
+      <div>
+        <ul>
+          <li class="rv" data-i="fd1"><strong>Audio explains part of the variation in valence.</strong> Ridge reaches R² 0.33 with whole albums held out (191 songs); the mean baseline sits near zero.</li>
+          <li class="rv" data-i="fd2"><strong>It beats the baseline on 9 of 10 albums</strong> (error 0.125 vs 0.157); <em>folklore</em> is a tie.</li>
+          <li class="rv" data-i="fd3"><strong>Lyrics added no consistent gain</strong> on the 130 songs that have them.</li>
+          <li class="rv" data-i="fd4"><strong>Generalisation varies by era:</strong> <em>reputation</em> and <em>Midnights</em> are over-estimated by about 0.13 and 0.10.</li>
+          <li class="rv" data-i="fd5"><strong>The sample is small,</strong> so these are exploratory findings, not universal ones. Correlation is not causation, and prediction is not explanation.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="rv" data-i="limh">Limitations</h3>
+        <ul>
+          <li class="rv" data-i="lim1">191 songs; folds with only 1–2 albums (130 songs, 8 albums with lyrics), so the spread across folds is large.</li>
+          <li class="rv" data-i="lim2">Lyrics stop at <em>folklore</em>; <em>evermore</em> and <em>Midnights</em> are not in the text experiments.</li>
+          <li class="rv" data-i="lim3">Audio for Fearless, Red and Speak Now comes from the Taylor’s Version re-recordings.</li>
+          <li class="rv" data-i="lim4">Valence is itself a score computed by Spotify, not a human rating.</li>
+          <li class="rv" data-i="lim5">The Ridge penalty was compared on the same data used for evaluation, which can flatter the best setting.</li>
+          <li class="rv" data-i="lim6">VADER was designed for short social-media text.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cols">
+      <div>
+        <h3 class="rv" data-i="srch">Sources &amp; method</h3>
+        <ul>
+          <li class="rv" data-i="src1">Audio features and album metadata: TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (from the R <code>taylor</code> package; Spotify API data).</li>
+          <li class="rv" data-i="src2">Lyrics: TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. Not redistributed; only derived numbers are versioned.</li>
+          <li class="rv" data-i="src3">Scripts: <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="rv" data-i="techh">Tech</h3>
+        <ul>
+          <li class="rv" data-i="tc1"><strong>Analysis:</strong> Python, pandas, scikit-learn, matplotlib, seaborn, Streamlit.</li>
+          <li class="rv" data-i="tc2"><strong>This page:</strong> HTML, CSS, JavaScript, GSAP + ScrollTrigger, SVG.</li>
+          <li class="rv" data-i="tc3"><strong>Code &amp; credits:</strong> <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a> — project by Laura Vieira.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="wrap tight maker">
+    <p class="kicker rv" data-i="kmk">Trade a bracelet</p>
+    <h3 class="h-md rv" data-i="mkt">Make one with your own word.</h3>
+    <p class="note rv" style="margin-top:0" data-i="mkn">At concerts, fans trade friendship bracelets. Here is a digital one: type up to 11 letters or numbers.</p>
+    <div class="ctrl rv"><input type="text" id="mkInput" maxlength="11" value="SWIFTLYTICS" autocomplete="off" spellcheck="false"><button class="chip plain" id="mkShuffle" type="button" data-i="mks">Shuffle colors</button></div>
+    <div class="maker-out" id="mkOut"></div>
+  </div>
+  <div class="final"><div id="finalBrace"></div><q class="rv" data-i="fq">“Every song has a feeling. Data helps us understand part of it.”</q><p class="by rv" data-i="by">Swiftlytics · The science behind music</p></div>
+  <p class="proto" data-i="proto"><span class="badge">prototype</span>All values are copied from the project’s script outputs. Per-song data exists here only for 10 songs of the album <em>Taylor Swift</em>; other albums show a marked placeholder until the full export is added.</p>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(q,c){return (c||document).querySelector(q)};
+var $$=function(q,c){return Array.prototype.slice.call((c||document).querySelectorAll(q))};
+var NS='http://www.w3.org/2000/svg';
+function s(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs){e.setAttribute(k,attrs[k]);}if(parent)parent.appendChild(e);return e;}
+function h(tag,attrs,html){var e=document.createElement(tag);for(var k in attrs){if(k==='class')e.className=attrs[k];else e.setAttribute(k,attrs[k]);}if(html!=null)e.innerHTML=html;return e;}
+var clamp=function(x,a,b){a=a==null?0:a;b=b==null?1:b;return Math.min(b,Math.max(a,x));};
+var ease=function(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;};
+var sm=function(a,b,x){x=clamp((x-a)/(b-a));return x*x*(3-2*x);};
+
+/* ---------- language ---------- */
+function pickLang(){
+  var hv=(location.hash||'').replace('#','').toLowerCase();
+  if(hv==='pt'||hv==='en')return hv;
+  try{var v=localStorage.getItem('swl');if(v==='pt'||v==='en')return v;}catch(e){}
+  return ((navigator.language||'en').toLowerCase().indexOf('pt')===0)?'pt':'en';
+}
+var LANG=pickLang(),PT=LANG==='pt';
+var L=function(en,pt){return PT?pt:en;};
+var N=function(v,d){var t=Math.abs(v).toFixed(d==null?2:d);if(PT)t=t.replace('.',',');return (v<0?'\u2212':'')+t;};
+var SG=function(v,d){var t=Math.abs(v).toFixed(d==null?3:d);if(PT)t=t.replace('.',',');return (v<0?'\u2212':'+')+t;};
+document.documentElement.lang=PT?'pt-BR':'en';
+
+var DICT={
+tlbtn:'Faixas',tlh:'Faixas',htag:'A CIÊNCIA POR TRÁS DA MÚSICA.',
+hq:'CONSEGUIMOS PREVER<br><em>O QUE UMA MÚSICA FAZ SENTIR?</em>',
+hcap:'Valência média por álbum, em ordem de eras — a onda sonora vira dado.',cue:'Role',
+k2:'Capítulo 02',k3:'Capítulo 03',k4:'Capítulo 04',k5:'Capítulo 05',k6:'Capítulo 06',k7:'Capítulo 07',
+t2:'Por trás<br>dos dados.',
+l2:'Duas fontes públicas, uma pergunta. Os números desta página vêm das saídas dos scripts do próprio projeto. A <strong>valência</strong> é a nota de 0 a 1 do Spotify para o quanto uma faixa soa positiva — o alvo aqui. A popularidade <strong>não</strong> faz parte deste estudo.',
+s1:'músicas após a limpeza',s2:'colunas originais',s3:'músicas com letra',s4:'álbuns com letra',s5:'fontes de dados',
+pl1h:'Base principal',pl1p:'194 músicas × 29 colunas dos álbuns de estúdio. A coluna de letras veio vazia e não há coluna de popularidade.',
+pl2h:'Limpeza',pl2p:'3 faixas bônus sem features de áudio removidas e coluna vazia descartada: 191 músicas × 28 colunas.',
+pl3h:'União com as letras',pl3p:'Uma segunda fonte, cruzada pelo título: 130 músicas em 8 álbuns. Ela termina em <em>folklore</em>.',
+pl4h:'Features',pl4p:'9 features de áudio, mais features de texto (sentimento, diversidade de vocabulário, TF-IDF). Só números derivados são guardados.',
+pl5h:'Modelagem',pl5p:'Ridge e Random Forest, validados com folds embaralhados e com álbuns inteiros de fora.',
+n2:'Duas amostras aparecem nesta história: <strong>191 músicas</strong> nos experimentos só com áudio e <strong>130 músicas</strong> em tudo que envolve letras. Elas nunca são misturadas numa comparação.',
+t3:'Cada era tem<br>o seu som.',
+l3:'Valência, energia e acusticidade médias de cada álbum, na ordem das eras. Role para o lado por dez álbuns.',
+hhint:'Role → dez eras',tl3:'O formato das eras',lg3v:'valência',lg3e:'energia',lg3a:'acusticidade',
+n3:'Os álbuns Taylor’s Version ficam na posição da era original; o áudio deles vem das regravações. A dançabilidade aparece nos achados, mas não no gráfico — os valores exatos por álbum não estão neste protótipo.',
+tl3b:'Como as features de áudio se relacionam',
+l3b:'Correlação de Pearson nas 191 músicas. A primeira linha é a valência — a variável que queremos prever.',
+f1h:'Virada acústica',f1p:'A acusticidade salta para 0,72 em <em>folklore</em> e 0,79 em <em>evermore</em>; os outros oito álbuns ficam entre 0,14 e 0,41.',
+f2h:'Sombrio, mas dançante',f2p:'<em>reputation</em> (0,29) e <em>Midnights</em> (0,28) têm as menores valências, enquanto a dançabilidade segue alta (cerca de 0,63–0,66, lida do gráfico).',
+f3h:'Energia acompanha o humor',f3p:'A energia se correlaciona com a valência em r = 0,51. É uma associação, não uma causa — e a energia se sobrepõe muito ao volume (r = 0,80).',
+t4:'Conseguimos prever<br>o que uma música faz sentir?',
+l4:'Um problema de regressão: usar como uma música <em>soa</em> para estimar sua valência e conferir a estimativa em músicas que o modelo nunca viu.',
+sp1b:'Alvo',sp1:'valência, de 0 (negativa) a 1 (positiva)',
+sp2b:'Preditores',sp2:'9 features de áudio: danceability, energy, loudness, speechiness, acousticness, liveness, tempo, duração e modo',
+sp3b:'Modelos',sp3:'Ridge (features padronizadas) e Random Forest (300 árvores), contra uma base “prever a média”',
+sp4b:'Validação',sp4:'5 folds embaralhados — e o teste mais duro: álbuns inteiros de fora',
+fh:'Pesos do Ridge · padronizados · ajustados nas 191 músicas',gh:'Exemplo · álbum fora do treino',
+gsub:'do álbum <em>Taylor Swift</em>',mkp:'previsto 0,76',mka:'real 0,82',
+sc1:'Uma música vira nove números que descrevem como ela soa…',
+sc2:'…cada um com o peso dado pelo modelo, e energy e acousticness carregam mais peso…',
+sc3:'…e o resultado é lido como uma valência prevista, para comparar com a real.',
+sfn:'Energy, loudness e acousticness são muito correlacionadas entre si, então leia os pesos em conjunto, não um por um.',
+r2h:'Qual a qualidade da previsão?',
+r2l:'O <strong>R²</strong> é a parcela da variação da valência que o modelo explica. <strong>Não</strong> é uma porcentagem de acertos: 0 significa não ser melhor que chutar a média; 1 seria perfeito.',
+r2f:'R² — quanto maior, melhor',maef:'Erro absoluto médio, em pontos de valência — quanto menor, melhor',
+co4:'<strong>Deixar álbuns inteiros de fora é o teste mais duro</strong>, porque o modelo não ouve nenhuma música do álbum que está prevendo. O R² cai de 0,40 para 0,33 — ainda acima da base, mas o número com folds embaralhados era otimista. O Random Forest só foi rodado com folds embaralhados, então compare-o com os 0,40 do Ridge, não com os 0,33.',
+avp:'Real vs previsto',
+avpl:'Cada ponto é uma música. Um modelo perfeito ficaria na diagonal tracejada. A nuvem, e não a linha, é o que R² ≈ 0,3 parece.',
+avpn:'<span class="badge">amostra</span>10 das 15 músicas do álbum <em>Taylor Swift</em>, com cada álbum fora do treino. A exportação completa por música está pendente.',
+t5:'As letras<br>acrescentam algo?',
+l5:'A fonte de letras cobre <strong>130 músicas de 8 álbuns</strong> (ela termina em <em>folklore</em>, então <em>evermore</em> e <em>Midnights</em> ficam de fora). Todas as comparações abaixo usam essas mesmas 130 músicas, com álbuns inteiros de fora. As letras em si nunca são exibidas nem guardadas no repositório — só números derivados delas.',
+te1b:'Sentimento VADER',te1:'Uma pontuação baseada em regras de quão positiva ou negativa é a escolha de palavras. Feita para textos curtos de redes sociais, então um ajuste aproximado para letras de música.',
+te2b:'Diversidade de vocabulário',te2:'Palavras únicas divididas pelo total de palavras, além da contagem de palavras e da parcela de linhas repetidas.',
+te3b:'TF-IDF',te3:'Até 300 palavras que caracterizam cada música frente às outras (mantidas se usadas em 3+ músicas), adicionadas ao Ridge com três intensidades de penalização.',
+h5a:'Só áudio vs áudio + TF-IDF',lgA:'só áudio',lgAT:'áudio + TF-IDF',lgT:'só TF-IDF',
+h5b:'Features simples de texto',lgA2:'só áudio',lgAS:'áudio + texto simples',lgTx:'só texto',
+co5:'<strong>Nenhum ganho consistente com as letras.</strong> Áudio + TF-IDF praticamente empata com só áudio (0,23 vs 0,24; 0,22 vs 0,22) e fica abaixo na penalização mais fraca (0,15 vs 0,21); as features simples de texto reduzem o R² (0,10 vs 0,21). O texto sozinho não faz melhor que a base da média. Com 8 álbuns, a variação entre folds é enorme (até ±0,46 nas features simples), então diferenças pequenas são ruído — a leitura segura é que não há evidência de que as letras ajudem.',
+h5c:'Como cada feature de texto se relaciona com a valência',l5c:'Correlação nas 130 músicas — apenas exploratória.',
+n5c:'A parcela de palavras negativas se correlaciona <em>positivamente</em> com a valência (0,24) e a pontuação geral de sentimento, <em>negativamente</em> (−0,21). É o oposto do que as palavras sozinhas sugeririam, o que é compatível com letras tristes sobre sons animados — mas é uma hipótese, não um resultado deste estudo.',
+t6:'O modelo entende<br>todas as eras?',
+l6:'Um teste de generalização. Deixe um álbum de fora, treine nos outros nove e preveja o que faltou — dez vezes. Só features de áudio, todas as 191 músicas.',
+bg1:'álbuns em que o modelo vence a base',bg2:'erro do modelo (absoluto médio)',bg3:'erro da base (prever a média)',
+h6a:'Erro por álbum',lgM:'modelo',lgB:'base',
+n6a:'<em>folklore</em> é o único empate (o modelo fica 0,003 pior que a base). Os maiores ganhos estão em <em>Red</em>, <em>Fearless</em>, <em>Speak Now</em> e <em>1989</em>.',
+h6b:'Valência real vs prevista, média do álbum',lgAc:'real',lgPr:'prevista com o álbum fora do treino',
+co6:'<strong>O modelo superestima o humor dos dois álbuns mais sombrios.</strong> Ele prevê cerca de 0,42 para <em>reputation</em> (real 0,29) e 0,39 para <em>Midnights</em> (real 0,28). Uma razão plausível é que dançabilidade alta soe “feliz” para um modelo só de áudio — uma explicação a testar, não algo que este projeto mostrou. As previsões também ficam comprimidas em direção ao meio: o modelo tem dificuldade nos extremos.',
+t7:'Sua vez<br>de explorar.',l7:'Escolha um álbum e veja como o modelo, com ele fora do treino, o tratou.',
+dbh:'Real ○ → previsto ●',
+n7s:'<span class="badge">amostra</span>10 de 15 músicas do álbum <em>Taylor Swift</em>. Passe o mouse ou toque num ponto para ver detalhes.',
+lblerr:'só erros ≥ 0,10',th1:'#',th2:'Música',th3:'Real',th4:'Previsto',th5:'Erro',
+n7t:'Erro = previsto − real. Positivo significa que o modelo ouviu a música como mais feliz do que ela é.',
+kfound:'O que encontramos',
+fd1:'<strong>O áudio explica parte da variação da valência.</strong> O Ridge chega a R² 0,33 com álbuns inteiros de fora (191 músicas); a base da média fica perto de zero.',
+fd2:'<strong>Ele vence a base em 9 de 10 álbuns</strong> (erro 0,125 vs 0,157); <em>folklore</em> é um empate.',
+fd3:'<strong>As letras não trouxeram ganho consistente</strong> nas 130 músicas que as têm.',
+fd4:'<strong>A generalização varia por era:</strong> <em>reputation</em> e <em>Midnights</em> são superestimados em cerca de 0,13 e 0,10.',
+fd5:'<strong>A amostra é pequena,</strong> então estes são achados exploratórios, não universais. Correlação não é causalidade, e previsão não é explicação.',
+limh:'Limitações',
+lim1:'191 músicas; folds com só 1–2 álbuns (130 músicas e 8 álbuns com letra), então a variação entre folds é grande.',
+lim2:'As letras param em <em>folklore</em>; <em>evermore</em> e <em>Midnights</em> não entram nos experimentos de texto.',
+lim3:'O áudio de Fearless, Red e Speak Now vem das regravações Taylor’s Version.',
+lim4:'A valência é uma nota calculada pelo Spotify, não uma avaliação humana.',
+lim5:'A penalização do Ridge foi comparada nos mesmos dados usados na avaliação, o que pode favorecer a melhor configuração.',
+lim6:'O VADER foi projetado para textos curtos de redes sociais.',
+srch:'Fontes e método',
+src1:'Features de áudio e metadados dos álbuns: TidyTuesday 2023-10-17, <code>taylor_album_songs</code> (do pacote R <code>taylor</code>; dados da API do Spotify).',
+src2:'Letras: TidyTuesday 2020-09-29, <code>taylor_swift_lyrics</code>. Não redistribuídas; só números derivados são versionados.',
+src3:'Scripts: <code>limpeza.py</code>, <code>eda.py</code>, <code>modelo_valencia.py</code>, <code>avaliacao.py</code>, <code>features_texto.py</code>, <code>modelo_texto.py</code>, <code>modelo_tfidf.py</code>, <code>por_album.py</code>, <code>dashboard.py</code>.',
+techh:'Tecnologia',
+tc1:'<strong>Análise:</strong> Python, pandas, scikit-learn, matplotlib, seaborn, Streamlit.',
+tc2:'<strong>Esta página:</strong> HTML, CSS, JavaScript, GSAP + ScrollTrigger, SVG.',
+tc3:'<strong>Código e créditos:</strong> <a href="https://github.com/LaurVieira/swiftlytics" target="_blank" rel="noopener">github.com/LaurVieira/swiftlytics</a> — projeto de Laura Vieira.',
+kmk:'Troque uma pulseira',mkt:'Monte uma com a sua palavra.',
+mkn:'Nos shows, os fãs trocam pulseiras da amizade. Aqui vai uma digital: digite até 11 letras ou números.',mks:'Misturar cores',
+fq:'“Toda música carrega um sentimento. Os dados nos ajudam a entender parte dele.”',
+by:'Swiftlytics · A ciência por trás da música',
+proto:'<span class="badge">protótipo</span>Todos os valores foram copiados das saídas dos scripts do projeto. Dados por música existem aqui só para 10 músicas do álbum <em>Taylor Swift</em>; os outros álbuns mostram um aviso marcado como placeholder até que a exportação completa seja adicionada.'
+};
+$$('[data-i]').forEach(function(el){if(PT&&DICT[el.getAttribute('data-i')]!=null)el.innerHTML=DICT[el.getAttribute('data-i')];});
+document.title=L('SWIFTLYTICS — The Science Behind Music','SWIFTLYTICS — A Ciência por Trás da Música');
+(function(){
+  $('#langEn').setAttribute('aria-pressed',PT?'false':'true');$('#langPt').setAttribute('aria-pressed',PT?'true':'false');
+  $('#tlClose').setAttribute('aria-label',L('Close','Fechar'));
+  $('#tracklist').setAttribute('aria-label',L('Tracklist','Faixas'));
+  $('#lineChart').setAttribute('aria-label',L('Line chart of average valence, energy and acousticness per album in era order','Gráfico de linhas da valência, energia e acusticidade médias por álbum, em ordem de eras'));
+  $('#heat').setAttribute('aria-label',L('Correlation heatmap of nine audio features','Mapa de calor da correlação entre nove features de áudio'));
+  $('#scat4').setAttribute('aria-label',L('Scatter plot of actual versus predicted valence for 10 songs','Dispersão da valência real contra a prevista para 10 músicas'));
+  $('#vb5a').setAttribute('aria-label',L('Grouped bar chart of R squared for audio only, audio plus TF-IDF and TF-IDF only at three Ridge penalties','Gráfico de barras do R² para só áudio, áudio + TF-IDF e só TF-IDF em três penalizações do Ridge'));
+  $('#vb5b').setAttribute('aria-label',L('Bar chart of R squared for audio only, audio plus simple text features and text only','Gráfico de barras do R² para só áudio, áudio + features simples de texto e só texto'));
+  $('#exChips').setAttribute('aria-label',L('Choose an album','Escolha um álbum'));
+  $('#exScatter').setAttribute('aria-label',L('Scatter plot of actual versus predicted valence for sampled songs','Dispersão da valência real contra a prevista para as músicas da amostra'));
+  $('#exQ').setAttribute('placeholder',L('Filter songs…','Filtrar músicas…'));$('#exQ').setAttribute('aria-label',L('Filter songs by title','Filtrar músicas por título'));
+  $('#mkInput').setAttribute('aria-label',L('Bracelet text','Texto da pulseira'));
+  $('#exBadge').textContent=L('placeholder','placeholder');
+  // decimal separators in the static big numbers
+  $$('.dec').forEach(function(e){e.textContent=PT?',':'.';});
+  $$('.gauge .tk').forEach(function(e,i){if(i===1)e.textContent=PT?'0,5':'0.5';});
+})();
+function setLang(l){
+  if(l===LANG)return;
+  try{localStorage.setItem('swl',l);}catch(e){}
+  try{sessionStorage.setItem('swy',String(window.scrollY));}catch(e){}
+  try{location.hash=l;}catch(e){}
+  location.reload();
+}
+$('#langEn').addEventListener('click',function(){setLang('en');});
+$('#langPt').addEventListener('click',function(){setLang('pt');});
+
+/* ---------- REAL DATA (copied from the project's outputs) ---------- */
+var ERAS=['Taylor Swift','Fearless (Taylor\u2019s Version)','Speak Now','Red (Taylor\u2019s Version)','1989','reputation','Lover','folklore','evermore','Midnights'];
+var SHORT=['Taylor Swift','Fearless TV','Speak Now','Red TV','1989','reputation','Lover','folklore','evermore','Midnights'];
+var BRACE=['TAYLORSWIFT','FEARLESS','SPEAKNOW','RED','1989','REPUTATION','LOVER','FOLKLORE','EVERMORE','MIDNIGHTS'];
+var VAL=[.43,.42,.41,.42,.45,.29,.48,.36,.43,.28];
+var ENG=[.66,.64,.67,.59,.70,.58,.55,.42,.49,.45];
+var ACO=[.18,.21,.20,.18,.14,.14,.33,.72,.79,.41];
+var A=[
+ {n:15,real:.427,pred:.470,mae:.103,base:.131,gain:.028},
+ {n:26,real:.422,pred:.406,mae:.095,base:.141,gain:.047},
+ {n:17,real:.410,pred:.411,mae:.156,base:.203,gain:.047},
+ {n:30,real:.425,pred:.342,mae:.109,base:.158,gain:.049},
+ {n:16,real:.454,pred:.482,mae:.125,base:.172,gain:.047},
+ {n:15,real:.293,pred:.420,mae:.128,base:.140,gain:.011},
+ {n:18,real:.481,pred:.428,mae:.153,base:.158,gain:.005},
+ {n:17,real:.361,pred:.329,mae:.122,base:.119,gain:-.003},
+ {n:17,real:.434,pred:.398,mae:.097,base:.139,gain:.042},
+ {n:20,real:.283,pred:.386,mae:.164,base:.204,gain:.040}
+];
+var VARS=['valence','danceability','energy','loudness','speechiness','acousticness','liveness','tempo','duration_ms'];
+var VSHORT=['val','dance','energy','loud','speech','acoust','live','tempo','dur'];
+var CORR=[
+ [1,.27,.51,.37,.09,-.21,-.04,.01,-.31],
+ [.27,1,.05,.02,.24,-.17,-.01,-.29,-.27],
+ [.51,.05,1,.80,-.02,-.69,.22,.13,-.10],
+ [.37,.02,.80,1,-.16,-.74,.25,.11,.01],
+ [.09,.24,-.02,-.16,1,-.03,0,.01,-.31],
+ [-.21,-.17,-.69,-.74,-.03,1,-.18,-.10,.07],
+ [-.04,-.01,.22,.25,0,-.18,1,.05,-.06],
+ [.01,-.29,.13,.11,.01,-.10,.05,1,.02],
+ [-.31,-.27,-.10,.01,-.31,.07,-.06,.02,1]
+];
+var COEF=[['energy',.120],['acousticness',.077],['danceability',.047],['duration',-.040],['loudness',.039],['liveness',-.031],['mode',.019],['speechiness',.010],['tempo',.004]];
+var SONGS=[['Tim McGraw',.42,.44],['Picture To Burn',.82,.76],['Teardrops On My Guitar',.29,.36],['A Place In This World',.43,.50],['Cold As You',.26,.30],['The Outside',.59,.52],['Tied Together With A Smile',.19,.48],['Stay Beautiful',.50,.43],['Should\u2019ve Said No',.47,.38],['Mary\u2019s Song (Oh My My My)',.37,.32]];
+var LYR=[['n_words',.15],['lexical_diversity',-.13],['repeated_lines',.01],['vader_pos',-.05],['vader_neg',.24],['vader_compound',-.21]];
+var LYR_LABEL={n_words:['word count','contagem de palavras'],lexical_diversity:['vocabulary diversity','diversidade de vocabulário'],repeated_lines:['repeated lines','linhas repetidas'],vader_pos:['VADER positive','VADER positivo'],vader_neg:['VADER negative','VADER negativo'],vader_compound:['VADER compound','VADER composto']};
+var NOTES={
+ 5:[L('Second-lowest valence of all ten albums (0.29), with danceability still high.','Segunda menor valência dos dez álbuns (0,29), com a dançabilidade ainda alta.'),L('Dark but danceable','Sombrio, mas dançante')],
+ 7:[L('Acousticness jumps to 0.72 while energy falls to its lowest (0.42).','A acusticidade salta para 0,72 enquanto a energia cai ao ponto mais baixo (0,42).'),L('Acoustic turn','Virada acústica')],
+ 8:[L('The most acoustic album (0.79).','O álbum mais acústico (0,79).'),L('Acoustic turn','Virada acústica')],
+ 9:[L('Valence 0.28 \u2014 the lowest of all ten albums \u2014 with high danceability.','Valência 0,28 \u2014 a menor dos dez álbuns \u2014 com dançabilidade alta.'),L('Dark but danceable','Sombrio, mas dançante')]
+};
+var CH=[['The question','A pergunta'],['Behind the data','Por trás dos dados'],['The musical patterns','Os padrões musicais'],['Can audio predict mood?','O áudio prevê o humor?'],['Beyond the sound','Além do som'],['The album test','O teste por álbum'],['Explore the data','Explore os dados'],['The conclusion','A conclusão']];
+var pad2=function(n){return (n<10?'0':'')+n;};
+
+/* ---------- album colours (fan-associated era palette) + bracelets ---------- */
+var EC=['#5FB8A6','#E3B04B','#A56FD6','#C2263F','#7CC6EE','#B9B9C4','#F4A3C6','#C9C3B4','#D08A3C','#5B6CE6'];
+function hexRgb(hex){var n=parseInt(hex.slice(1),16);return (n>>16&255)+','+(n>>8&255)+','+(n&255);}
+function lumin(hex){var n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;return (.2126*r+.7152*g+.0722*b)/255;}
+function bracelet(text,o){
+  o=o||{};var r=o.r||13,sp=o.sp||5,gp=3,slots=11,lc=o.lc||EC,scs=o.sc||['#FFFFFF'];
+  var clean=String(text).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,slots).split('');
+  var pad=slots-clean.length,left=Math.floor(pad/2),arr=[],i;
+  for(i=0;i<left;i++)arr.push('*');
+  clean.forEach(function(c){arr.push(c);});
+  while(arr.length<slots)arr.push('*');
+  var x=14,items=[];
+  arr.forEach(function(ch,k){
+    x+=r;items.push({k:ch==='*'?'F':'L',x:x,ch:ch,c:lc[k%lc.length]});x+=r+gp;
+    if(k<slots-1){x+=sp;items.push({k:'S',x:x,c:scs[k%scs.length]});x+=sp+gp;}
+  });
+  var W=x+14,H=2*r+22,sag=7;
+  var yAt=function(cx){return r+8+sag*Math.sin(Math.PI*cx/W);};
+  var svg=s('svg',{viewBox:'0 0 '+W+' '+H,'class':'brace'+(o.nt?' nt':''),role:'img','aria-label':L('Friendship bracelet spelling ','Pulseira da amizade com a palavra ')+clean.join('')});
+  var d='M0 '+yAt(0).toFixed(1);for(var cx=0;cx<=W;cx+=6){d+='L'+cx+' '+yAt(cx).toFixed(1);}
+  s('path',{d:d,'class':'str'},svg);
+  items.forEach(function(it,idx){
+    var g=s('g',{'class':'bead'},svg),y=yAt(it.x);
+    g.style.transitionDelay=(idx*.03)+'s';
+    var b=s('g',{'class':'bob'},g);b.style.setProperty('--k',idx);
+    s('circle',{cx:it.x,cy:y,r:it.k==='S'?sp:r,fill:it.c,stroke:'rgba(0,0,0,.28)','stroke-width':1},b);
+    if(it.k!=='S')s('ellipse',{cx:it.x-r*.3,cy:y-r*.36,rx:r*.34,ry:r*.17,fill:'rgba(255,255,255,.38)'},b);
+    if(it.k==='L'){var t=s('text',{x:it.x,y:y+4.6},b);t.textContent=it.ch;t.style.fill=lumin(it.c)<.48?'#FFFFFF':'#0B0B0F';}
+    if(it.k==='F'){var q=r*.55,e=r*.14;s('path',{d:'M'+it.x+' '+(y-q)+'L'+(it.x+e)+' '+(y-e)+'L'+(it.x+q)+' '+y+'L'+(it.x+e)+' '+(y+e)+'L'+it.x+' '+(y+q)+'L'+(it.x-e)+' '+(y+e)+'L'+(it.x-q)+' '+y+'L'+(it.x-e)+' '+(y-e)+'Z',fill:'rgba(255,255,255,.9)'},b);}
+  });
+  return svg;
+}
+function setEra(i){var r=document.documentElement;r.style.setProperty('--era',EC[i]);r.style.setProperty('--era-rgb',hexRgb(EC[i]));}
+function clearEra(){var r=document.documentElement;r.style.removeProperty('--era');r.style.removeProperty('--era-rgb');}
+
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var hasG=!!(window.gsap&&window.ScrollTrigger);
+if(hasG){gsap.registerPlugin(ScrollTrigger);}
+var motion=hasG&&!reduce;
+
+/* ---------- tooltip ---------- */
+var tip=$('#tip');
+function tipOn(el,html){
+  el.setAttribute('tabindex','0');
+  function place(x,y){tip.style.left=Math.max(8,Math.min(x+14,innerWidth-tip.offsetWidth-8))+'px';tip.style.top=Math.max(8,y-tip.offsetHeight-12)+'px';}
+  el.addEventListener('pointerenter',function(e){tip.innerHTML=html;tip.classList.add('on');place(e.clientX,e.clientY);});
+  el.addEventListener('pointermove',function(e){place(e.clientX,e.clientY);});
+  el.addEventListener('pointerleave',function(){tip.classList.remove('on');});
+  el.addEventListener('focus',function(){var r=el.getBoundingClientRect();tip.innerHTML=html;tip.classList.add('on');place(r.left+r.width/2,r.top);});
+  el.addEventListener('blur',function(){tip.classList.remove('on');});
+}
+
+/* ---------- HUD, vinyl, tracklist ---------- */
+var bar=$('#bar'),vinyl=$('#vinyl');
+function hud(){var d=document.documentElement.scrollHeight-innerHeight;bar.style.transform='scaleX('+(d>0?clamp(scrollY/d):0)+')';if(!reduce)vinyl.style.transform='rotate('+(scrollY*.18)+'deg)';}
+addEventListener('scroll',hud,{passive:true});addEventListener('resize',hud);hud();
+function setLabel(i){$('#chapterLabel').textContent=pad2(i+1)+' \u2014 '+CH[i][PT?1:0];}
+setLabel(0);
+(function(){
+  var tl=$('#tracklist'),btn=$('#tlBtn'),list=$('#tlList');
+  CH.forEach(function(c,i){
+    var li=h('li',{}),b=h('button',{type:'button','data-go':'c'+(i+1)},'<i style="color:'+EC[i]+'">'+pad2(i+1)+'</i><span>'+c[PT?1:0]+'</span>');
+    li.appendChild(b);list.appendChild(li);
+    b.addEventListener('click',function(){
+      close();
+      var el=document.getElementById('c'+(i+1)),top=i===0?0:el.getBoundingClientRect().top+window.scrollY;
+      window.scrollTo({top:top,behavior:reduce?'auto':'smooth'});
+    });
+  });
+  function open(){tl.hidden=false;btn.setAttribute('aria-expanded','true');$('#tlClose').focus();}
+  function close(){tl.hidden=true;btn.setAttribute('aria-expanded','false');}
+  btn.addEventListener('click',function(){tl.hidden?open():close();});
+  $('#tlClose').addEventListener('click',function(){close();btn.focus();});
+  addEventListener('keydown',function(e){if(e.key==='Escape'&&!tl.hidden){close();btn.focus();}});
+})();
+
+/* ---------- 01 hero wave ---------- */
+(function(){
+  var N=160,W=1200;
+  var yv=function(v){return 330-(v-.25)*(260/.30);};
+  var tg=A.map(function(a){return yv(a.real);});
+  var TY=[];for(var i=0;i<=N;i++){var u=i/N*9,j=Math.min(8,Math.floor(u)),fr=u-j,c=(1-Math.cos(fr*Math.PI))/2;TY.push(tg[j]*(1-c)+tg[j+1]*c);}
+  var env=function(i){return Math.pow(Math.sin(Math.PI*i/N),.5);};
+  var base=function(i,t,k){return Math.sin(i*.0825+t*k)*.6+Math.sin(i*.2025-t*1.3*k)*.3+Math.sin(i*.457+t*2*k)*.1;};
+  var p1=$('#w1'),p2=$('#w2'),p3=$('#w3'),pd=$('#wdots');
+  tg.forEach(function(y,j){s('path',{d:'M'+(j/9*W).toFixed(1)+' '+y.toFixed(1)+'h0',stroke:EC[j]},pd);});
+  var heroP=0,tt=0;
+  function path(fn){var d='';for(var i=0;i<=N;i++){d+=(i?'L':'M')+(i/N*W).toFixed(1)+' '+fn(i).toFixed(1);}return d;}
+  function draw(){
+    var m=ease(clamp((heroP-.3)/.6)),amp=130*(1-m);
+    p1.setAttribute('d',path(function(i){var w=200+amp*env(i)*base(i,tt,1);return w*(1-m)+TY[i]*m;}));
+    p2.setAttribute('d',path(function(i){return 200+amp*.75*env(i)*base(i,tt*.8+1.5,1.2);}));
+    p3.setAttribute('d',path(function(i){return 200+amp*.5*env(i)*base(i,tt*.6+3,.8);}));
+    p2.style.opacity=(1-m)*.6;p3.style.opacity=(1-m)*.2;
+    pd.style.opacity=sm(.85,1,m);
+  }
+  window.__heroSet=function(p){heroP=p;if(!motion)draw();};
+  draw();
+  if(motion){(function loop(ts){tt=ts/1000;draw();requestAnimationFrame(loop);})(0);}
+  var pc=$('#particles');
+  for(var k=0;k<34;k++){var b=document.createElement('b');b.style.left=(Math.random()*100)+'%';b.style.top=(10+Math.random()*80)+'%';b.style.background=EC[k%EC.length];b.style.animationDuration=(5+Math.random()*7)+'s';b.style.animationDelay=(-Math.random()*8)+'s';b.style.width=b.style.height=(6+Math.random()*8)+'px';pc.appendChild(b);}
+})();
+
+/* ---------- 03 era panels ---------- */
+(function(){
+  var tr=$('#htrack');
+  ERAS.forEach(function(name,i){
+    var a=h('article',{class:'era on'});a.style.setProperty('--ec',EC[i]);a.style.setProperty('--ec-rgb',hexRgb(EC[i]));
+    var note=NOTES[i],isTV=(i===1||i===3);
+    a.innerHTML='<span class="era-n">'+pad2(i+1)+'</span><h3>'+name+'</h3>'+
+      (isTV?'<span class="tv-tag">'+L('Taylor\u2019s Version \u00b7 audio from the re-recording','Taylor\u2019s Version \u00b7 áudio da regravação')+'</span>':'')+
+      '<div class="meter"><span>'+L('valence','valência')+'</span><div class="tr"><i style="--w:'+VAL[i]+'"></i></div><b>'+N(VAL[i])+'</b></div>'+
+      '<div class="meter m-e"><span>'+L('energy','energia')+'</span><div class="tr"><i style="--w:'+ENG[i]+'"></i></div><b>'+N(ENG[i])+'</b></div>'+
+      '<div class="meter m-a"><span>'+L('acousticness','acusticidade')+'</span><div class="tr"><i style="--w:'+ACO[i]+'"></i></div><b>'+N(ACO[i])+'</b></div>'+
+      '<div class="era-note">'+(note?'<span class="hl-tag">'+note[1]+'</span><br>'+note[0]:'')+'</div>';
+    a.appendChild(bracelet(BRACE[i],{r:11,sp:4,lc:[EC[i]],sc:['#FFFFFF',EC[i]]}));
+    tr.appendChild(a);
+  });
+  // line chart
+  var svg=$('#lineChart'),W=1000,H=440,L0=54,R0=890,T=30,B=360;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var X=function(i){return L0+i/9*(R0-L0);},Y=function(v){return B-v/.85*(B-T);};
+  [[7,8,L('Acoustic turn','Virada acústica')],[5,5,L('Dark but danceable','Sombrio, mas dançante')],[9,9,'']].forEach(function(b){
+    s('rect',{x:X(b[0])-24,y:T,width:X(b[1])-X(b[0])+48,height:B-T,'class':'band'},svg);
+    if(b[2]){s('text',{x:(X(b[0])+X(b[1]))/2,y:T+14,'text-anchor':'middle','class':'bandt'},svg).textContent=b[2];}
+  });
+  [0,.2,.4,.6,.8].forEach(function(v){
+    s('line',{x1:L0,x2:R0,y1:Y(v),y2:Y(v),'class':'grid'},svg);
+    s('text',{x:L0-10,y:Y(v)+4,'text-anchor':'end','class':'axb'},svg).textContent=N(v,1);
+  });
+  SHORT.forEach(function(n,i){
+    var dot=s('circle',{cx:X(i),cy:B,r:6,fill:EC[i],stroke:'var(--bg)','stroke-width':2},svg);tipOn(dot,'<b>'+ERAS[i]+'</b>');
+    var t=s('text',{x:X(i)+4,y:B+22,'text-anchor':'end','class':'axb',transform:'rotate(-32 '+(X(i)+4)+' '+(B+22)+')'},svg);t.textContent=n;
+  });
+  var series=[[VAL,'var(--lilac)',L('valence','valência')],[ENG,'var(--ink)',L('energy','energia')],[ACO,'var(--purple)',L('acousticness','acusticidade')]];
+  series.forEach(function(sr){
+    var d=sr[0].map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join('');
+    var p=s('path',{d:d,'class':'ser',stroke:sr[1],pathLength:1,'stroke-dasharray':1,'stroke-dashoffset':0},svg);
+    p.setAttribute('data-draw','1');
+    sr[0].forEach(function(v,i){
+      var c=s('circle',{cx:X(i),cy:Y(v),r:5,fill:sr[1],stroke:'var(--bg)','stroke-width':2},svg);
+      tipOn(c,'<b>'+ERAS[i]+'</b><br>'+sr[2]+' '+N(v));
+    });
+    var lb=s('text',{x:R0+14,y:Y(sr[0][9])+4,'class':'axb'},svg);lb.textContent=sr[2];lb.style.fill=sr[1];
+  });
+  // heatmap
+  var heat=$('#heat');
+  heat.appendChild(h('div',{}));
+  VSHORT.forEach(function(n){heat.appendChild(h('div',{class:'hh'},n));});
+  CORR.forEach(function(row,r){
+    heat.appendChild(h('div',{class:'hl'},VSHORT[r]));
+    row.forEach(function(v,c){
+      var a=Math.min(1,Math.abs(v))*.92;
+      var txt=v===1?'1':((v<0?'\u2212':'')+Math.abs(v).toFixed(2).replace('0.','.'));
+      if(PT)txt=txt.replace('.',',');
+      var cell=h('div',{class:'hc'+(((r===0&&c===2)||(r===2&&c===0))?' key':'')},txt);
+      cell.style.background='rgba('+(v>=0?'var(--pos-rgb)':'var(--neg-rgb)')+','+a+')';
+      tipOn(cell,'<b>'+VARS[r]+' \u00d7 '+VARS[c]+'</b><br>r = '+N(v));
+      heat.appendChild(cell);
+    });
+  });
+})();
+
+/* ---------- 04 scene + results ---------- */
+function scatter(svg,pts){
+  var W=440,H=440,L0=58,R0=18,T=18,B=54,lo=.1,hi=.9;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var X=function(v){return L0+(v-lo)/(hi-lo)*(W-L0-R0);},Y=function(v){return H-B-(v-lo)/(hi-lo)*(H-T-B);};
+  [.2,.4,.6,.8].forEach(function(v){
+    s('line',{x1:L0,x2:W-R0,y1:Y(v),y2:Y(v),'class':'grid'},svg);s('line',{x1:X(v),x2:X(v),y1:T,y2:H-B,'class':'grid'},svg);
+    s('text',{x:L0-10,y:Y(v)+4,'text-anchor':'end','class':'ax'},svg).textContent=N(v,1);
+    s('text',{x:X(v),y:H-B+20,'text-anchor':'middle','class':'ax'},svg).textContent=N(v,1);
+  });
+  s('line',{x1:X(lo),y1:Y(lo),x2:X(hi),y2:Y(hi),'class':'diag'},svg);
+  s('text',{x:X(.62),y:Y(.62)-10,'class':'ax',transform:'rotate(-45 '+X(.62)+' '+(Y(.62)-10)+')'},svg).textContent=L('perfect prediction','previsão perfeita');
+  s('text',{x:(L0+W-R0)/2,y:H-10,'text-anchor':'middle','class':'ttl'},svg).textContent=L('actual valence','valência real');
+  s('text',{x:14,y:(T+H-B)/2,'text-anchor':'middle','class':'ttl',transform:'rotate(-90 14 '+((T+H-B)/2)+')'},svg).textContent=L('predicted valence','valência prevista');
+  return pts.map(function(p){
+    var st=s('line',{x1:X(p[1]),x2:X(p[1]),y1:Y(p[1]),y2:Y(p[2]),'class':'stem'},svg);var c=s('circle',{cx:X(p[1]),cy:Y(p[2]),r:7,'class':'pt','data-y0':Y(p[1])},svg);c._stem=st;
+    tipOn(c,'<b>'+p[0]+'</b><br>'+L('actual ','real ')+N(p[1])+' \u00b7 '+L('predicted ','previsto ')+N(p[2])+'<br>'+L('error ','erro ')+SG(p[2]-p[1],2));
+    return c;
+  });
+}
+function rowBars(box,rows,max){
+  rows.forEach(function(r){
+    var row=h('div',{class:'rb'+(r.hl?' hl':'')});
+    row.innerHTML='<div class="rb-l"><b>'+r.label+'</b><small>'+(r.sub||'')+'</small></div><div class="rb-t"><i style="width:'+(Math.max(0,r.v)/max*100)+'%"></i></div><div class="rb-v">'+r.text+(r.small?'<small>'+r.small+'</small>':'')+'</div>';
+    box.appendChild(row);
+  });
+}
+(function(){
+  var fl=$('#featList');
+  COEF.forEach(function(c){
+    var w=Math.abs(c[1])/.12*50;
+    var row=h('div',{class:'feat-row'});
+    row.innerHTML='<span>'+c[0]+'</span><div class="fb"><i class="'+(c[1]>=0?'pos':'neg')+'" style="'+(c[1]>=0?'left:50%':'right:50%')+';width:'+w+'%"></i></div><b>'+SG(c[1])+'</b>';
+    fl.appendChild(row);
+  });
+  var pm=L('\u00b1 ','\u00b1 ');
+  rowBars($('#r2Rows'),[
+    {label:'Ridge \u00b7 '+L('shuffled folds','folds embaralhados'),sub:L('songs from every album in training','músicas de todos os álbuns no treino'),v:.40,text:N(.40),small:pm+N(.05)},
+    {label:'Ridge \u00b7 '+L('albums held out','álbuns de fora'),sub:L('the strictest test','o teste mais duro'),v:.33,text:N(.33),small:pm+N(.07),hl:true},
+    {label:'Random Forest \u00b7 '+L('shuffled folds','folds embaralhados'),sub:L('not run with held-out albums','não rodado com álbuns de fora'),v:.27,text:N(.27),small:pm+N(.12)},
+    {label:L('Baseline \u00b7 predict the mean','Base \u00b7 prever a média'),sub:L('shuffled folds','folds embaralhados'),v:0,text:N(-.01),small:pm+N(.01)}
+  ],.5);
+  rowBars($('#maeRows'),[
+    {label:L('Baseline \u00b7 predict the mean','Base \u00b7 prever a média'),sub:L('shuffled folds','folds embaralhados'),v:.155,text:N(.155,3)},
+    {label:'Random Forest \u00b7 '+L('shuffled folds','folds embaralhados'),v:.128,text:N(.128,3)},
+    {label:'Ridge \u00b7 '+L('shuffled folds','folds embaralhados'),v:.117,text:N(.117,3)},
+    {label:'Ridge \u00b7 '+L('albums held out','álbuns de fora'),sub:L('vs baseline 0.155','vs base 0,155'),v:.124,text:N(.124,3),hl:true}
+  ],.18);
+  scatter($('#scat4'),SONGS);
+})();
+
+/* ---------- 05 lyrics ---------- */
+function vbars(svg,o){
+  var W=o.W||900,H=o.H||400,L0=58,R0=20,T=24,B=74,pw=W-L0-R0,ph=H-T-B;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var y=function(v){return T+(o.max-v)/(o.max-o.min)*ph;},y0=y(0),step=.1;
+  for(var v=Math.ceil(o.min/step)*step;v<=o.max+1e-9;v+=step){
+    var vv=Math.round(v*10)/10;
+    s('line',{x1:L0,x2:W-R0,y1:y(vv),y2:y(vv),'class':'grid'},svg);
+    s('text',{x:L0-10,y:y(vv)+4,'text-anchor':'end','class':'axb'},svg).textContent=N(vv,1);
+  }
+  s('line',{x1:L0,x2:W-R0,y1:y0,y2:y0,stroke:'var(--mute)','stroke-width':1.2},svg);
+  var gw=pw/o.groups.length,ns=o.series.length,bw=gw*.72/ns;
+  o.groups.forEach(function(g,gi){
+    g.values.forEach(function(val,si){
+      var x=L0+gi*gw+gw*.14+si*bw,top=val>=0?y(val):y0,ht=Math.abs(y(val)-y0);
+      var r=s('rect',{x:x+bw*.06,y:top,width:bw*.88,height:Math.max(ht,1),rx:3,'class':'bar '+(val>=0?'pos':'neg')+' s'+si},svg);
+      r.style.transformBox='fill-box';r.style.transformOrigin=val>=0?'50% 100%':'50% 0%';
+      r.style.fill=o.series[si].color;if(o.series[si].op)r.style.opacity=o.series[si].op;
+      var lbl=s('text',{x:x+bw/2,y:val>=0?top-8:top+ht+16,'text-anchor':'middle','class':'axb'},svg);lbl.textContent=N(val);lbl.style.fill='var(--ink)';
+      tipOn(r,'<b>'+o.series[si].name+'</b><br>'+g.label.replace(/\n/g,' \u00b7 ')+'<br>R\u00b2 '+N(val)+(g.sd?' \u00b1 '+(PT?g.sd[si].replace('.',','):g.sd[si]):''));
+    });
+    g.label.split('\n').forEach(function(p,pi){s('text',{x:L0+gi*gw+gw/2,y:H-B+30+pi*18,'text-anchor':'middle','class':'axb'},svg).textContent=p;});
+  });
+  if(o.baseline!=null){
+    s('line',{x1:L0,x2:W-R0,y1:y(o.baseline),y2:y(o.baseline),stroke:'var(--lilac)','stroke-width':1.2,'stroke-dasharray':'6 5'},svg);
+    s('text',{x:W-R0,y:y(o.baseline)-7,'text-anchor':'end','class':'bandt'},svg).textContent=o.baseLabel;
+  }
+}
+(function(){
+  var S=[{name:L('Audio only','Só áudio'),color:'var(--ink)',op:.8},{name:L('Audio + TF-IDF','Áudio + TF-IDF'),color:'var(--lilac)'},{name:L('TF-IDF only','Só TF-IDF'),color:'var(--mute)',op:.55}];
+  var pen=L('Ridge penalty\n\u03b1 = ','Penalização do Ridge\n\u03b1 = ');
+  vbars($('#vb5a'),{min:-.3,max:.4,baseline:-.13,baseLabel:L('mean baseline (130 songs) \u22120.13','base da média (130 músicas) \u22120,13'),series:S,groups:[
+    {label:pen+'1',values:[.21,.15,-.20],sd:['0.37','0.44','0.39']},
+    {label:pen+'10',values:[.24,.23,-.13],sd:['0.36','0.37','0.22']},
+    {label:pen+'100',values:[.22,.22,-.13],sd:['0.25','0.25','0.19']}]});
+  vbars($('#vb5b'),{W:520,H:400,min:-.3,max:.4,baseline:-.13,baseLabel:L('mean baseline \u22120.13','base da média \u22120,13'),series:[S[0],{name:L('Audio + simple text','Áudio + texto simples'),color:'var(--lilac)'},{name:L('Text only','Só texto'),color:'var(--mute)',op:.55}],groups:[
+    {label:L('Simple lyric features\n\u03b1 = 1','Features simples de letra\n\u03b1 = 1'),values:[.21,.10,-.20],sd:['0.37','0.46','0.41']}]});
+  var box=$('#lyrCorr');
+  LYR.forEach(function(c){
+    var w=Math.abs(c[1])/.3*50;
+    var row=h('div',{class:'corr'});
+    row.innerHTML='<span>'+LYR_LABEL[c[0]][PT?1:0]+'</span><div class="fb"><i class="'+(c[1]>=0?'pos':'neg')+'" style="'+(c[1]>=0?'left:50%':'right:50%')+';width:'+w+'%"></i></div><b>'+N(c[1])+'</b>';
+    box.appendChild(row);
+  });
+})();
+
+/* ---------- 06 album test ---------- */
+function dumbRow(real,pred){
+  var lo=.2,hi=.56,pos=function(v){return clamp((v-lo)/(hi-lo))*100;};
+  var d=h('div',{class:'db'});
+  d.innerHTML='<div class="axl"></div><div class="ln"></div><div class="dr"></div><div class="dp"></div>';
+  var ln=$('.ln',d),dr=$('.dr',d),dp=$('.dp',d);
+  dr.style.left=pos(real)+'%';
+  d.set=function(t){var cur=real+(pred-real)*t,a=pos(real),b=pos(cur);dp.style.left=b+'%';ln.style.left=Math.min(a,b)+'%';ln.style.width=Math.abs(a-b)+'%';};
+  d.set(1);
+  return d;
+}
+(function(){
+  var dsc=$('#dsc');[.20,.38,.56].forEach(function(v){dsc.appendChild(h('span',{},N(v)));});
+  var mb=$('#maeAlb'),db=$('#dumbAlb');
+  A.forEach(function(a,i){
+    var hl=(i===5||i===9);
+    var sw='<i class="sw" style="background:'+EC[i]+'"></i>';
+    var r=h('div',{class:'arow'+(hl?' hl':'')});
+    r.innerHTML='<span class="al">'+sw+SHORT[i]+'</span><div><div class="mb base" style="width:'+(a.base/.22*100)+'%"></div><div class="mb model" style="width:'+(a.mae/.22*100)+'%"></div></div><span class="av"><b>'+N(a.mae,3)+'</b> vs '+N(a.base,3)+'<br>'+(a.gain>=0?L('better by ','melhor em ')+N(a.gain,3):L('worse by ','pior em ')+N(Math.abs(a.gain),3))+'</span>';
+    mb.appendChild(r);
+    var r2=h('div',{class:'arow'+(hl?' hl':'')});
+    var d=dumbRow(a.real,a.pred);d.classList.add('rowdumb');
+    var gap=a.pred-a.real;
+    r2.innerHTML='<span class="al">'+sw+SHORT[i]+'</span>';
+    var wrapper=h('div',{});wrapper.appendChild(d);r2.appendChild(wrapper);
+    r2.appendChild(h('span',{class:'av'},'<b>'+N(a.real,3)+'</b> \u2192 '+N(a.pred,3)+'<br>'+(hl?'<span style="color:var(--lilac)">'+L('over-estimated by ','superestimado em ')+N(gap,3)+'</span>':L('gap ','diferença ')+SG(gap))));
+    db.appendChild(r2);
+  });
+})();
+
+/* ---------- 07 explorer ---------- */
+(function(){
+  var sel=0,chips=$('#exChips');
+  var rankOf=function(i){var g=A[i].gain;return 1+A.filter(function(a){return a.gain>g;}).length;};
+  var tied=function(i){return A.filter(function(a){return a.gain===A[i].gain;}).length>1;};
+  var pts=scatter($('#exScatter'),SONGS);
+  $('#exScatter').style.setProperty('--ptc',EC[0]);
+  ERAS.forEach(function(n,i){
+    var b=h('button',{class:'chip',type:'button','aria-pressed':i===0?'true':'false'},SHORT[i]);b.style.setProperty('--ec',EC[i]);
+    b.addEventListener('click',function(){sel=i;$$('.chip',chips).forEach(function(c,j){c.setAttribute('aria-pressed',j===i?'true':'false');});render();});
+    chips.appendChild(b);
+  });
+  function render(){
+    var a=A[sel];
+    $('#c7').style.setProperty('--ec',EC[sel]);
+    $('#exName').innerHTML='<i class="sw" style="background:'+EC[sel]+'"></i>'+ERAS[sel]+' \u00b7 '+a.n+L(' songs',' músicas');
+    var gap=a.pred-a.real;
+    $('#exMetrics').innerHTML=
+      '<div><dt>'+L('Actual valence','Valência real')+'</dt><dd>'+N(a.real,3)+'</dd></div>'+
+      '<div><dt>'+L('Predicted valence','Valência prevista')+'</dt><dd>'+N(a.pred,3)+'<small>'+SG(gap)+'</small></dd></div>'+
+      '<div><dt>'+L('Model error','Erro do modelo')+'</dt><dd>'+N(a.mae,3)+'</dd></div>'+
+      '<div><dt>'+L('Baseline error','Erro da base')+'</dt><dd>'+N(a.base,3)+'</dd></div>'+
+      '<div><dt>'+L('Gain over baseline','Ganho sobre a base')+'</dt><dd>'+SG(a.gain)+'</dd></div>'+
+      '<div><dt>'+L('Rank by gain','Posição pelo ganho')+'</dt><dd>#'+rankOf(sel)+'<small>'+L('of 10','de 10')+(tied(sel)?L(' \u00b7 tied',' \u00b7 empate'):'')+'</small></dd></div>';
+    var dm=$('#exDumb');dm.innerHTML='';dm.appendChild(dumbRow(a.real,a.pred));
+    var sample=sel===0;
+    $('#exSample').hidden=!sample;$('#exTableBox').hidden=!sample;$('#exHolder').hidden=sample;
+    if(!sample){$('#exHolderTxt').textContent=L('Per-song values for '+ERAS[sel]+' are not bundled in this prototype yet. They come from the valence and valence_pred columns computed by dashboard.py.','Os valores por música de '+ERAS[sel]+' ainda não estão neste protótipo. Eles vêm das colunas valence e valence_pred calculadas pelo dashboard.py.');}
+    else renderTable();
+  }
+  function renderTable(){
+    var q=$('#exQ').value.trim().toLowerCase(),only=$('#exErr').checked,body=$('#exTable');body.innerHTML='';
+    SONGS.forEach(function(r,i){
+      var err=r[2]-r[1],ok=(!q||r[0].toLowerCase().indexOf(q)>-1)&&(!only||Math.abs(err)>=.10);
+      pts[i].classList.toggle('dim',!ok);pts[i]._stem.classList.toggle('dim',!ok);
+      if(!ok)return;
+      var tr=h('tr',{});
+      tr.innerHTML='<td>'+(i+1)+'</td><td>'+r[0]+'</td><td>'+N(r[1])+'</td><td>'+N(r[2])+'</td><td class="'+(err>0?'over':'')+'">'+SG(err,2)+'</td>';
+      body.appendChild(tr);
+    });
+    if(!body.children.length){body.innerHTML='<tr><td colspan="5" style="color:var(--mute)">'+L('No songs match this filter.','Nenhuma música corresponde a este filtro.')+'</td></tr>';}
+  }
+  $('#exQ').addEventListener('input',renderTable);$('#exErr').addEventListener('change',renderTable);
+  render();
+})();
+
+/* ---------- 08 ending line, bracelets, maker ---------- */
+var makerRender;
+(function(){
+  var N0=160,W=1200,yv=function(v){return 330-(v-.25)*(260/.30);},tg=A.map(function(a){return yv(a.real);}),d='';
+  for(var i=0;i<=N0;i++){var u=i/N0*9,j=Math.min(8,Math.floor(u)),fr=u-j,c=(1-Math.cos(fr*Math.PI))/2,y=tg[j]*(1-c)+tg[j+1]*c;d+=(i?'L':'M')+(i/N0*W).toFixed(1)+' '+y.toFixed(1);}
+  $('#endPath').setAttribute('d',d);
+  var gr=$('#eraGrad');EC.forEach(function(c,i){s('stop',{offset:(i/9*100)+'%','stop-color':c},gr);});
+  var el=$('#endWords');el.textContent=L('Music is more than numbers.','Música é mais do que números.');
+  el.innerHTML=el.textContent.split(' ').map(function(w){return '<span class="w">'+w+'</span>';}).join('');
+  $('#heroBrace').appendChild(bracelet('SWIFTLYTICS',{r:13,nt:true}));
+  $('#finalBrace').appendChild(bracelet(L('FEELING','SENTIMENTO'),{r:18,sp:6,nt:true}));
+  // maker
+  var out=$('#mkOut'),input=$('#mkInput'),colors=EC.slice();
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  makerRender=function(animate){
+    out.innerHTML='';
+    var svg=bracelet(input.value||'SWIFTLYTICS',{r:17,sp:6,lc:colors,sc:['#FFFFFF',colors[0]],nt:true});
+    out.appendChild(svg);
+    if(animate&&motion){gsap.from($$('.bead',svg),{scale:0,opacity:0,stagger:.025,duration:.5,ease:'back.out(2.5)'});}
+  };
+  input.addEventListener('input',function(){makerRender(false);});
+  $('#mkShuffle').addEventListener('click',function(){colors=shuffle(EC.slice());makerRender(true);});
+  makerRender(false);
+})();
+
+/* ---------- ANIMATION LAYER ---------- */
+if(hasG){
+  var mm=gsap.matchMedia();
+  mm.add({desktop:'(min-width: 900px)',motion:'(prefers-reduced-motion: no-preference)'},function(ctx){
+    var c=ctx.conditions;
+    function labels(){
+      $$('.chapter').forEach(function(sec,i){
+        ScrollTrigger.create({trigger:sec,refreshPriority:-1,start:'top 50%',end:'bottom 50%',onToggle:function(self){if(self.isActive)setLabel(i);}});
+      });
+    }
+    if(!c.motion){window.__heroSet(0);labels();return;}
+    document.documentElement.classList.add('js-motion');
+
+    // 01 hero
+    var title=$('#heroTitle'),q=$('#heroQ'),cue=$('#cue'),cap=$('#waveCap');
+    ScrollTrigger.create({trigger:'#c1',start:'top top',end:c.desktop?'+=260%':'+=210%',pin:true,anticipatePin:1,onUpdate:function(self){
+      var p=self.progress;window.__heroSet(p);
+      title.style.opacity=1-sm(.05,.3,p);
+      title.style.transform='translate(-50%,-50%) scale('+(1+p*.35)+')';
+      q.style.opacity=sm(.28,.45,p);
+      q.style.transform='translate(-50%,-50%) translateY('+((1-sm(.28,.5,p))*26)+'px)';
+      cue.style.opacity=1-sm(0,.08,p);
+      cap.style.opacity=sm(.82,.96,p);
+    }});
+    gsap.from('#heroTitle h1',{y:60,opacity:0,duration:1.4,ease:'power3.out'});
+    gsap.from('#heroTitle .tag',{opacity:0,duration:1.2,delay:.6});
+    gsap.from('#heroBrace .bead',{y:-36,opacity:0,stagger:.04,duration:.9,ease:'bounce.out',delay:1});
+
+    // 02 counters + pipeline
+    $$('[data-count]').forEach(function(el){
+      var target=+el.getAttribute('data-count'),o={v:0};el.textContent='0';
+      ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:function(){gsap.to(o,{v:target,duration:1.6,ease:'power2.out',onUpdate:function(){el.textContent=Math.round(o.v);}});}});
+    });
+    var pipe=$('#pipe'),lis=$$('li',pipe),pl=$('.pl-line',pipe);
+    lis.forEach(function(li){li.classList.remove('on');});pl.style.setProperty('--p',0);
+    ScrollTrigger.create({trigger:pipe,start:'top 78%',end:'bottom 60%',scrub:true,onUpdate:function(self){
+      var p=self.progress;pl.style.setProperty('--p',p);
+      lis.forEach(function(li,i){li.classList.toggle('on',p>=i/(lis.length-1)-.02);});
+    }});
+
+    // 03 horizontal timeline
+    var eras=$$('.era');
+    eras.forEach(function(e){e.classList.remove('on');});
+    if(c.desktop){
+      var track=$('#htrack'),vp=$('#hscroll'),fill=$('#hfill');
+      var dist=function(){return Math.max(0,track.scrollWidth-vp.clientWidth);};
+      gsap.to(track,{x:function(){return -dist();},ease:'none',scrollTrigger:{trigger:vp,start:'top top',end:function(){return '+='+dist();},pin:true,scrub:true,anticipatePin:1,invalidateOnRefresh:true,
+        onToggle:function(self){if(!self.isActive)clearEra();},
+        onUpdate:function(self){
+          fill.style.transform='scaleX('+self.progress+')';
+          var best=0,bd=1e9;
+          eras.forEach(function(e,i){
+            var r=e.getBoundingClientRect();
+            if(r.left<innerWidth*.82&&r.right>innerWidth*.12)e.classList.add('on');
+            var dd=Math.abs((r.left+Math.min(r.width,innerWidth*.4)/2)-innerWidth*.4);if(dd<bd){bd=dd;best=i;}
+          });
+          setEra(best);
+        }}});
+      ScrollTrigger.create({trigger:vp,start:'top 80%',once:true,onEnter:function(){eras[0].classList.add('on');}});
+    }else{
+      ScrollTrigger.batch('.era',{start:'top 85%',once:true,onEnter:function(b){b.forEach(function(e){e.classList.add('on');});}});
+      eras.forEach(function(e,i){ScrollTrigger.create({trigger:e,start:'top 60%',end:'bottom 40%',onToggle:function(self){if(self.isActive)setEra(i);}});});
+      ScrollTrigger.create({trigger:'#hscroll',start:'top bottom',end:'bottom top',onToggle:function(self){if(!self.isActive)clearEra();}});
+    }
+    gsap.from($$('#lineChart [data-draw]'),{strokeDashoffset:1,ease:'none',stagger:.15,scrollTrigger:{trigger:'#lineChart',start:'top 75%',end:'bottom 55%',scrub:true}});
+    gsap.from($$('#heat .hc'),{opacity:0,scale:.5,duration:.5,stagger:{each:.01},scrollTrigger:{trigger:'#heat',start:'top 82%',once:true}});
+
+    // 04 scene
+    if(c.desktop){
+      var tl=gsap.timeline({scrollTrigger:{trigger:'#scene4',start:'top top',end:'+=220%',pin:true,scrub:.6,anticipatePin:1}});
+      var caps=$$('#sceneCap span');
+      tl.from('.feat-row',{opacity:0,x:-24,stagger:.1,duration:.6},0)
+        .from('.fb i',{scaleX:0,stagger:.1,duration:.6},.2)
+        .fromTo(caps[0],{opacity:0},{opacity:1,duration:.4},.2)
+        .to(caps[0],{opacity:0,duration:.3},1.5)
+        .from('.mid',{opacity:0,scale:.7,duration:.5},1.4)
+        .fromTo(caps[1],{opacity:0},{opacity:1,duration:.4},1.6)
+        .to(caps[1],{opacity:0,duration:.3},2.8)
+        .from('.gauge-wrap',{opacity:0,y:20,duration:.5},2.4)
+        .fromTo('#mkPred',{left:'50%'},{left:'76%',duration:1,ease:'power2.out'},3)
+        .from('#mkAct',{opacity:0,scale:.2,duration:.5},3.9)
+        .fromTo(caps[2],{opacity:0},{opacity:1,duration:.4},3.1)
+        .to({},{duration:.8});
+    }else{
+      $$('#scene4 .feat-row,#scene4 .gauge-wrap,#scene4 .mid').forEach(function(e){gsap.set(e,{opacity:0,y:26});});
+      ScrollTrigger.batch('#scene4 .feat-row,#scene4 .mid,#scene4 .gauge-wrap',{start:'top 90%',once:true,onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.8,stagger:.08});}});
+      $$('#sceneCap span').forEach(function(e){e.style.opacity=1;});
+    }
+    ['#r2Rows','#maeRows'].forEach(function(sel){
+      gsap.from(sel+' .rb-t i',{scaleX:0,duration:1.2,stagger:.14,ease:'power3.out',scrollTrigger:{trigger:sel,start:'top 82%',once:true}});
+    });
+    
+    (function(){
+      var svg=$('#scat4'),pts=$$('.pt',svg),stems=$$('.stem',svg);
+      pts.concat(stems).forEach(function(e){e.style.transition='none';});
+      var tl=gsap.timeline({scrollTrigger:{trigger:svg,start:'top 78%',once:true}});
+      tl.from($('.diag',svg),{opacity:0,duration:.6});
+      pts.forEach(function(el,i){
+        var y0=+el.getAttribute('data-y0'),y1=+el.getAttribute('cy'),st=el._stem,at=.5+i*.09;
+        tl.fromTo(el,{attr:{cy:y0},opacity:0},{attr:{cy:y1},opacity:1,duration:1,ease:'power3.inOut'},at);
+        tl.fromTo(st,{attr:{y2:y0},opacity:0},{attr:{y2:y1},opacity:1,duration:1,ease:'power3.inOut'},at);
+      });
+    })();
+
+    // 05 bars
+    ['#vb5a','#vb5b'].forEach(function(sel){
+      gsap.from(sel+' rect.bar',{scaleY:0,duration:1.1,stagger:.08,ease:'power3.out',scrollTrigger:{trigger:sel,start:'top 78%',once:true}});
+    });
+    gsap.from('#lyrCorr .fb i',{scaleX:0,duration:.9,stagger:.1,ease:'power3.out',scrollTrigger:{trigger:'#lyrCorr',start:'top 85%',once:true}});
+
+    // 06 album test
+    gsap.from('#maeAlb .mb',{scaleX:0,duration:1,stagger:.05,ease:'power3.out',scrollTrigger:{trigger:'#maeAlb',start:'top 80%',once:true}});
+    $$('#dumbAlb .rowdumb').forEach(function(d,i){
+      d.set(0);var o={t:0};
+      ScrollTrigger.create({trigger:d,start:'top 92%',once:true,onEnter:function(){gsap.to(o,{t:1,duration:1.4,delay:i*.04,ease:'power3.inOut',onUpdate:function(){d.set(o.t);}});}});
+    });
+
+    // 08 ending
+    var words=$$('#endWords .w'),endPath=$('#endPath');
+    var etl=gsap.timeline({scrollTrigger:{trigger:'#endIntro',start:'top top',end:'+=130%',pin:true,scrub:.6,anticipatePin:1}});
+    etl.from(endPath,{strokeDashoffset:1,ease:'none',duration:2},0)
+       .from(words,{opacity:.08,y:30,stagger:.5,duration:.6},.2);
+    ScrollTrigger.create({trigger:'#finalBrace',start:'top 88%',once:true,onEnter:function(){gsap.from('#finalBrace .bead',{y:-50,opacity:0,stagger:.06,duration:1,ease:'bounce.out'});}});
+
+    // reveals + labels last, so their positions account for every pin above them
+    ScrollTrigger.batch('.rv',{refreshPriority:-1,start:'top 90%',once:true,onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.9,stagger:.08,ease:'power3.out',overwrite:true});}});
+    labels();
+
+    return function(){document.documentElement.classList.remove('js-motion');};
+  });
+  addEventListener('load',function(){
+    ScrollTrigger.refresh();
+    try{var y=sessionStorage.getItem('swy');if(y!=null){sessionStorage.removeItem('swy');setTimeout(function(){window.scrollTo(0,+y);},80);}}catch(e){}
+  });
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){ScrollTrigger.refresh();});}
+}else{
+  addEventListener('load',function(){try{var y=sessionStorage.getItem('swy');if(y!=null){sessionStorage.removeItem('swy');window.scrollTo(0,+y);}}catch(e){}});
+}
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
@@ -11,7 +10,7 @@ SAIDA = RAIZ / "data" / "processed" / "lyrics_features.csv"
 
 def normalizar(titulo: str) -> str:
     t = str(titulo).lower().replace("’", "'")
-    t = re.sub(r"\(.*?\)", " ", t)  
+    t = re.sub(r"\(.*?\)", " ", t)
     t = re.sub(r"[^a-z0-9 ]", "", t)
     return " ".join(t.split())
 

@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
@@ -8,7 +7,6 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import GroupKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-
 from features_texto import normalizar
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -20,7 +18,6 @@ AUDIO = ["danceability", "energy", "loudness", "speechiness",
 ALVO = "valence"
 ALPHAS = [1, 10, 100]
 
-
 def montar(usar_audio: bool, usar_texto: bool, alpha: float):
     partes = []
     if usar_audio:
@@ -31,14 +28,12 @@ def montar(usar_audio: bool, usar_texto: bool, alpha: float):
         partes.append(("texto", tfidf, "Lyrics"))
     return make_pipeline(ColumnTransformer(partes), Ridge(alpha=alpha))
 
-
 def avaliar(nome, modelo, X, y, grupos):
     cv = GroupKFold(n_splits=5)
     r2 = cross_val_score(modelo, X, y, cv=cv, groups=grupos, scoring="r2")
     mae = -cross_val_score(modelo, X, y, cv=cv, groups=grupos,
                            scoring="neg_mean_absolute_error")
     print(f"{nome:28s} R² = {r2.mean():.2f} (±{r2.std():.2f}) | erro médio = {mae.mean():.3f}")
-
 
 if __name__ == "__main__":
     letras = pd.read_csv(LETRAS)

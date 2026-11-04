@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -20,7 +19,6 @@ ALVO = "valence"
 ORDEM = ["Taylor Swift", "Fearless (Taylor's Version)", "Speak Now",
          "Red (Taylor's Version)", "1989", "reputation", "Lover",
          "folklore", "evermore", "Midnights"]
-
 
 if __name__ == "__main__":
     sns.set_theme(style="whitegrid")

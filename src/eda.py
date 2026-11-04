@@ -15,7 +15,6 @@ ORDEM = ["Taylor Swift", "Fearless (Taylor's Version)", "Speak Now",
 FEATURES_CORR = ["valence", "danceability", "energy", "loudness", "speechiness",
                  "acousticness", "liveness", "tempo", "duration_ms"]
 
-
 def grafico_evolucao(df: pd.DataFrame) -> None:
     medias = (df.groupby("album_name")[["valence", "energy", "acousticness", "danceability"]]
                 .mean().loc[ORDEM])
@@ -29,7 +28,6 @@ def grafico_evolucao(df: pd.DataFrame) -> None:
     plt.savefig(FIGURAS / "evolucao_por_album.png", dpi=150)
     plt.close()
 
-
 def grafico_correlacao(df: pd.DataFrame) -> None:
     plt.figure(figsize=(8, 6))
     sns.heatmap(df[FEATURES_CORR].corr(), annot=True, fmt=".2f", cmap="coolwarm", center=0)
@@ -37,7 +35,6 @@ def grafico_correlacao(df: pd.DataFrame) -> None:
     plt.tight_layout()
     plt.savefig(FIGURAS / "correlacao.png", dpi=150)
     plt.close()
-
 
 if __name__ == "__main__":
     sns.set_theme(style="whitegrid")

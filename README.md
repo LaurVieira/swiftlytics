@@ -24,6 +24,13 @@ A data science project that explores Taylor Swift's discography through Spotify 
 4. Download the dataset: `wget -P data/raw https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-10-17/taylor_album_songs.csv`
 5. Run the scripts in order: `python src/limpeza.py`, `python src/eda.py`, `python src/modelo_valencia.py`, `python src/avaliacao.py`
 
+## Results
+
+- Audio features alone explain about a third of a song's valence (Ridge, R² 0.33, held-out albums, 191 songs).
+- On the 130 songs with lyrics (8 albums), adding simple lyric features (VADER sentiment, vocabulary diversity, line repetition) did not improve predictions: audio only R² 0.21 vs audio + text R² 0.10.
+- Interpret with care: small sample, folds with only 1-2 albums, and the lyrics dataset does not cover *evermore* or *Midnights*.
+- On the 130 songs with lyrics (8 albums), lyric features did not improve predictions. Simple features (VADER sentiment, vocabulary diversity, line repetition) and TF-IDF (300 terms, three Ridge penalties) both matched or underperformed audio only (R² 0.21-0.24).
+
 ## Author
 
 Laura Vieira - [@LaurVieira](https://github.com/LaurVieira)

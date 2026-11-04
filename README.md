@@ -30,6 +30,9 @@ A data science project that explores Taylor Swift's discography through Spotify 
 - On the 130 songs with lyrics (8 albums), adding simple lyric features (VADER sentiment, vocabulary diversity, line repetition) did not improve predictions: audio only R² 0.21 vs audio + text R² 0.10.
 - Interpret with care: small sample, folds with only 1-2 albums, and the lyrics dataset does not cover *evermore* or *Midnights*.
 - On the 130 songs with lyrics (8 albums), lyric features did not improve predictions. Simple features (VADER sentiment, vocabulary diversity, line repetition) and TF-IDF (300 terms, three Ridge penalties) both matched or underperformed audio only (R² 0.21-0.24).
+- Leaving one album out at a time, the audio model beat the mean baseline on 9 of 10 albums (mean absolute error 0.125 vs 0.157). It overestimated the mood of *reputation* and *Midnights*, the two lowest-valence albums (predicted ~0.42 and ~0.39 vs actual ~0.29 and ~0.28), which suggests danceability and energy can mask sad-sounding songs.
+
+![Real vs predicted valence per album](reports/figures/real_vs_previsto_por_album.png)
 
 ## Author
 

@@ -8,6 +8,7 @@ A data science project that explores Taylor Swift's discography through Spotify 
 - **Exploratory analysis**: average valence, energy, acousticness and danceability per album in era order, plus a correlation heatmap (`src/eda.py`).
 - **Valence model**: compares a mean baseline, Ridge regression and Random Forest with 5-fold cross-validation (`src/modelo_valencia.py`).
 - **Album-level validation**: holds out entire albums to avoid optimistic scores and reports Ridge coefficients (`src/avaliacao.py`).
+- **Dashboard**: Streamlit app to browse albums and compare actual vs predicted valence per song (`streamlit run src/dashboard.py`).
 
 ## Tech Stack
 
